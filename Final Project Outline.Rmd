@@ -21,6 +21,11 @@ safe <- import(here("data", "2006_school_safety.sav"),
                setclass = "tbl_df") %>% 
   characterize() %>% 
   janitor::clean_names() 
+
+safe08 <- import(here('data', '2008_school_safety.sav'),
+                 setclass = 'tbl_df') %>% 
+  characterize() %>% 
+  janitor::clean_names()
 ```
 
 ### Chosen Format
@@ -36,3 +41,6 @@ The data for our project comes from the 2005-2006 School Survey on Crime and Saf
 
 
 ### Lingering Questions
+
+# JP's note:
+Hey all, while I was looking into the SSOCS data, the main data source is at [The National Center for Education Statistics](https://nces.ed.gov/surveys/ssocs/index.asp). I found that the data in this file has a similar file for the following cycle (07-08). I thought since we are in interested in a shiny app, which includes dropdown menus to show differences, we could have a dropdown menu that shows our models between the year cycles. This is just a thought and it wouldn't add much to our work but would add more to the implications of the app. 

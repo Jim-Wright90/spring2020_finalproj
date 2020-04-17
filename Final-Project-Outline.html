@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
@@ -1395,6 +1394,7 @@ summary {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -1423,6 +1423,12 @@ summary {
 }
 }
 
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
 
 .toc-content {
   padding-left: 30px;
@@ -1514,6 +1520,10 @@ div.tocify {
 </div>
 <div id="lingering-questions" class="section level3">
 <h3>Lingering Questions</h3>
+</div>
+<div id="jps-note" class="section level1">
+<h1>JP’s note:</h1>
+<p>Hey all, while I was looking into the SSOCS data, the main data source is at <a href="https://nces.ed.gov/surveys/ssocs/index.asp">The National Center for Education Statistics</a>. I found that the data in this file has a similar file for the following cycle (07-08). I thought since we are in interested in a shiny app, which includes dropdown menus to show differences, we could have a dropdown menu that shows our models between the year cycles. This is just a thought and it wouldn’t add much to our work but would add more to the implications of the app.</p>
 </div>
 
 
