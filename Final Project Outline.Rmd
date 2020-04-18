@@ -22,6 +22,11 @@ safe <- import(here("data", "2006_school_safety.sav"),
   characterize() %>% 
   janitor::clean_names() 
 
+safe06 <- import(here("data", "2006_school_safety_v2.sav"),
+               setclass = "tbl_df") %>% 
+  characterize() %>% 
+  janitor::clean_names() 
+
 safe08 <- import(here('data', '2008_school_safety.sav'),
                  setclass = 'tbl_df') %>% 
   characterize() %>% 
