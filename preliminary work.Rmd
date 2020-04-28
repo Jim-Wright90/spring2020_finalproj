@@ -1,0 +1,56 @@
+---
+title: "Preliminary Ideas"
+author: "JP"
+date: "4/28/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Preliminary Ideas
+
+```{r}
+library(tidyverse)
+library(psych)
+```
+
+
+```{r}
+safe06 <- safe06 %>% 
+  dplyr::select(-c0016_r)
+
+safe08 <- safe08 %>% 
+  dplyr::select(-c0016_r)
+
+safe06$year <- c('2005-2006')
+
+safe08$year <- c('2007-2008')
+
+all <- full_join(safe06, safe08)
+```
+
+Since we discussed creating models, it might be easier to create scatterplots showing the associations and then have a visual next to it that shows the strength of the correlation. Then our audience can check the listed predictors on a dropdown menu and the outcomes to see each of the associations in scatterpots. Just an idea. 
+
+### Potential Outcomes 
+number students involved in insubordination total = c0508
+number of removals for insubordination = c0510
+insubordination suspension = c0514, this variable is in both datasets
+total off school suspensions = outsus08 for 07-08, outsus06 for 05-06
+percentage of students likely to go to college = c0534
+percentage students academic achievement important = c0536
+
+### Potential Predictors
+average percentage daily attendance = c0568
+school size = fr_size
+student counseling/social work = c0178
+individual mentoring/tutoring = c0180
+recreation/student activities = c0182
+provide training/assistance to parents = c0192
+program involves parents at school = c0194
+parental involvement back to school night = c0196
+parent participates parent-teacher conference = c0198
+parent participates in subject-area events = c0200
+parent volunteers at school = c0202
+
