@@ -65,3 +65,29 @@ C0380 How often student verbal abuse of teachers
 
 # JP's note:
 Hey all, while I was looking into the SSOCS data, the main data source is at [The National Center for Education Statistics](https://nces.ed.gov/surveys/ssocs/index.asp). I found that the data in this file has a similar file for the following cycle (07-08). I thought since we are in interested in a shiny app, which includes dropdown menus to show differences, we could have a dropdown menu that shows our models between the year cycles. This is just a thought and it wouldn't add much to our work but would add more to the implications of the app. 
+
+# Claire's thoughts:
+
+1. Data description - we probably want to start with this:
+The School Survey on Crime and Safety (SSOCS) is the primary source of school-level data on crime and safety for the U.S. Department of Education, National Center for Education Statistics (NCES). It is a nationally representative survey of about 4,800 public elementary and secondary schools and there'are several waves of data available at https://nces.ed.gov/surveys/ssocs/data_products.asp#1999, from SY 1999-2000 to SY 17-18. 
+
+2. About our shiny app - it can be so much fun:
+After consultation with Daniel and going though the shiny app he shared with us today (4/29), I really think we can do something just like that. 
+
+For example, we can take advantage of the several waves available, say 05-06, 07-08, 15-16, 17-18, and see through how the variables of our interest and their relationships evolve over years. We can produce a shiny app just like Daniel did: put each variable (e.g., verbal abuse of teachers) or each correlation (e.g., urbanicity and out of school suspensions) into the dropdown mane and give readers view options like "four year total", "compare 05-06 and 15-16", "compare 07-08 and 17-18", "by year", or even "by grade", etc.
+
+The four waves of data are here:
+
+```{r}
+sf06 <- import(here("data", "pu_ssocs06_spss.sav"),
+               setclass = "tbl_df") 
+sf08 <- import(here("data", "pu_ssocs08_spss.sav"),
+               setclass = "tbl_df") 
+sf16 <- import(here("data", "pu_ssocs16.sas7bdat"),
+               setclass = "tbl_df")
+sf18 <- import(here("data", "pu_ssocs18.sav"),
+               setclass = "tbl_df")
+
+```
+
+Looking forward to your thoughts!
