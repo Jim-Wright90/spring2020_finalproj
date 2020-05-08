@@ -78,7 +78,7 @@ promote sense of community integration = c0186
     * 4 = Combined Middle School and High School
     
 3. School Urbanicity 
-  * fr_loc4 for 05-06 and fr_urban for 07-08
+  * fr_urban for both data sets
   * 1 = City
   * 2 = Suburb (coded as "urban fringe" in 05-06 data set)
   * 3 = Town

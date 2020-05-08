@@ -1,0 +1,133 @@
+---
+title: "Jim Preliminary Work"
+author: "Jim Wright"
+date: "5/7/2020"
+output:
+  html_document: 
+    toc: true
+    toc_float: true
+    theme: "spacelab"
+    highlight: "tango"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(rio)
+library(here)
+library(tidyverse)
+library(gt)
+
+safe06 <- import(here("data", "2006_school_safety.sav"),
+               setclass = "tbl_df") %>% 
+  characterize() %>% 
+  janitor::clean_names() 
+
+safe08 <- import(here('data', '2008_school_safety.sav'),
+                 setclass = 'tbl_df') %>% 
+  characterize() %>% 
+  janitor::clean_names()
+
+safe18 <- import(here('data', '2018_school_safety.sav'),
+                 setclass = 'tbl_df') %>% 
+  characterize() %>% 
+  janitor::clean_names()
+
+all_safe <- bind_rows(safe06, safe08, safe18, .id = "dataset")
+
+head(all_safe)
+```
+
+
+### Descriptive Statistics 
+```{r descriptive statistics, include=FALSE}
+school_minority <- all_safe %>% 
+  select(dataset, schid, fr_catmn, fr_lvel, fr_urban, fr_size) %>% 
+  group_by(dataset, fr_catmn) %>% 
+  summarize(n=n()) %>% 
+  na.omit() %>% 
+  gt() %>% 
+  cols_label(fr_catmn = "Minority Status",
+             n = "Total") %>% 
+  cols_align(align = "left", columns = vars(fr_catmn)) %>% 
+  cols_align(align = "center", columns = vars(n)) %>% 
+  tab_header(title = "Descriptive Statistics of School Minority Status") %>% 
+  tab_source_note(source_note = "1 = 05-06 school year; 2 = 07-08 school year")
+
+school_minority
+
+school_size <- all_safe %>% 
+  select(dataset, schid, fr_catmn, fr_lvel, fr_urban, fr_size) %>% 
+  group_by(dataset, fr_size) %>% 
+  summarize(n=n()) %>% 
+  na.omit() %>% 
+  gt() %>% 
+  cols_label(fr_size = "School Size",
+             n = "Total") %>% 
+  cols_align(align = "left", columns = vars(fr_size)) %>% 
+  cols_align(align = "center", columns = vars(n)) %>% 
+  tab_header(title = "Descriptive Statistics of School Size") %>% 
+  tab_source_note(source_note = "1 = 05-06 school year; 2 = 07-08 school year; 3 = 17-18 school year")
+
+school_size
+
+school_level <- all_safe %>% 
+  select(dataset, schid, fr_catmn, fr_lvel, fr_urban, fr_size) %>% 
+  group_by(dataset, fr_lvel) %>% 
+  summarize(n=n()) %>% 
+  na.omit() %>% 
+  gt() %>% 
+  cols_label(fr_lvel = "School Level",
+             n = "Total") %>% 
+  cols_align(align = "left", columns = vars(fr_lvel)) %>% 
+  cols_align(align = "center", columns = vars(n)) %>% 
+  tab_header(title = "Descriptive Statistics of School Level") %>% 
+  tab_source_note(source_note = "1 = 05-06 school year; 2 = 07-08 school year; 3 = 17-18 school year")
+
+school_level
+
+
+school_urban <- all_safe %>% 
+  select(dataset, schid, fr_catmn, fr_lvel, fr_urban, fr_size) %>% 
+  group_by(dataset, fr_urban) %>% 
+  summarize(n=n()) %>% 
+  na.omit() %>% 
+  gt() %>% 
+  cols_label(fr_urban = "Urbanicity",
+             n = "Total") %>% 
+  cols_align(align = "left", columns = vars(fr_urban)) %>% 
+  cols_align(align = "center", columns = vars(n)) %>% 
+  tab_header(title = "Descriptive Statistics of School Urbanicity") %>% 
+  tab_source_note(source_note = "1 = 05-06 school year; 2 = 07-08 school year; 3 = 17-18 school year")
+
+school_urban
+```
+
+### Descriptive Statistics Tables
+```{r tables, include=TRUE}
+school_level
+
+school_minority
+
+school_size
+
+school_urban
+```
+
+### What is the relationship between school urbanicity and the percentage of students likely to go to college across each year of the survey?
+```{r}
+by_year <- split(all_safe, all_safe$dataset)
+
+
+mods <- map(by_year, ~lm(c0534 ~ fr_urban, data = .x))
+
+str(mods)
+
+coefs <- map(mods, coef) 
+
+coefs[c(1:2, length(coefs))]
+
+slopes <- map_dbl(coefs, 2)
+
+slopes
+```
