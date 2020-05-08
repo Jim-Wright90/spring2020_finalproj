@@ -37,20 +37,55 @@ Since we discussed creating models, it might be easier to create scatterplots sh
 number students involved in insubordination total = c0508
 number of removals for insubordination = c0510
 insubordination suspension = c0514, this variable is in both datasets
-total off school suspensions = outsus08 for 07-08, outsus06 for 05-06
+total off school suspensions = outsus08 for 07-08, outsus06 for 05-06, outsus18 for 17-18
 percentage of students likely to go to college = c0534
 percentage students academic achievement important = c0536
+
+* Can't find c0508, c0510, or co514 in 17-18 data set 
 
 ### Potential Predictors
 average percentage daily attendance = c0568
 school size = fr_size
 student counseling/social work = c0178
-individual mentoring/tutoring = c0180
-recreation/student activities = c0182
+individual mentoring/tutoring = c0180 - c0181 in 17-18
+recreation/student activities = c0182 - can't find in 17-18
 provide training/assistance to parents = c0192
 program involves parents at school = c0194
 parental involvement back to school night = c0196
 parent participates parent-teacher conference = c0198
-parent participates in subject-area events = c0200
-parent volunteers at school = c0202
+parent participates in subject-area events = c0200 - can't find in 17-18
+parent volunteers at school = c0202 - can't find in 17-18
 
+Maybe things changed in coding by the time the 17-18 survey was conducted because I can't find a lot of the variables JP identified in the 05-06 and 07-08. Here are some that seem similar in 17-18:
+student involvement in peer mediation = c0175
+student involvement in restorative circles = c0179
+promote sense of community integration = c0186
+
+
+### Additional Predictors
+1. Percent of minority student enrollment 
+  * fr_catmn both data sets 
+    * 1 = less than 5 percent
+    * 2 = 5 to less than 20 percent
+    * 3 = 20 to less than 50 percent
+    * 4 = 50 percent or more 
+
+2. School Level
+  * fr_lvel in both data sets 
+    * 1 = Elementary
+    * 2 = Middle
+    * 3 = High School (Secondary)
+    * 4 = Combined Middle School and High School
+    
+3. School Urbanicity 
+  * fr_loc4 for 05-06 and fr_urban for 07-08
+  * 1 = City
+  * 2 = Suburb (coded as "urban fringe" in 05-06 data set)
+  * 3 = Town
+  * 4 = Rural 
+
+4. Size (fr_size) levels
+  * 1 = < 300
+  * 2 = 300 - 499
+  * 3 = 500 - 999
+  * 4 1,000 or more
