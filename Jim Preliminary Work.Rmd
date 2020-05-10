@@ -33,13 +33,16 @@ safe18 <- import(here('data', '2018_school_safety.sav'),
   characterize() %>% 
   janitor::clean_names()
 
-all_safe <- bind_rows(safe06, safe08, safe18, .id = "dataset")
+all_safe <- bind_rows("05-06 Survey" = safe06, 
+                      "07-08 Survey" = safe08, 
+                      "17-18 Survey" = safe18, 
+                      .id = "dataset")
 
 head(all_safe)
 ```
 
 
-### Descriptive Statistics 
+### School Totals
 ```{r descriptive statistics, include=FALSE}
 school_minority <- all_safe %>% 
   select(dataset, schid, fr_catmn, fr_lvel, fr_urban, fr_size) %>% 
@@ -51,8 +54,7 @@ school_minority <- all_safe %>%
              n = "Total") %>% 
   cols_align(align = "left", columns = vars(fr_catmn)) %>% 
   cols_align(align = "center", columns = vars(n)) %>% 
-  tab_header(title = "Descriptive Statistics of School Minority Status") %>% 
-  tab_source_note(source_note = "1 = 05-06 school year; 2 = 07-08 school year")
+  tab_header(title = "Number of Schools by Minority Status")
 
 school_minority
 
@@ -62,12 +64,11 @@ school_size <- all_safe %>%
   summarize(n=n()) %>% 
   na.omit() %>% 
   gt() %>% 
-  cols_label(fr_size = "School Size",
+  cols_label(fr_size = "Enrollment",
              n = "Total") %>% 
   cols_align(align = "left", columns = vars(fr_size)) %>% 
   cols_align(align = "center", columns = vars(n)) %>% 
-  tab_header(title = "Descriptive Statistics of School Size") %>% 
-  tab_source_note(source_note = "1 = 05-06 school year; 2 = 07-08 school year; 3 = 17-18 school year")
+  tab_header(title = "Number of Schools by Size")
 
 school_size
 
@@ -81,8 +82,7 @@ school_level <- all_safe %>%
              n = "Total") %>% 
   cols_align(align = "left", columns = vars(fr_lvel)) %>% 
   cols_align(align = "center", columns = vars(n)) %>% 
-  tab_header(title = "Descriptive Statistics of School Level") %>% 
-  tab_source_note(source_note = "1 = 05-06 school year; 2 = 07-08 school year; 3 = 17-18 school year")
+  tab_header(title = "Number of Schools by Level")
 
 school_level
 
@@ -97,8 +97,7 @@ school_urban <- all_safe %>%
              n = "Total") %>% 
   cols_align(align = "left", columns = vars(fr_urban)) %>% 
   cols_align(align = "center", columns = vars(n)) %>% 
-  tab_header(title = "Descriptive Statistics of School Urbanicity") %>% 
-  tab_source_note(source_note = "1 = 05-06 school year; 2 = 07-08 school year; 3 = 17-18 school year")
+  tab_header(title = "Number of Schools by Urbanicity")
 
 school_urban
 ```
@@ -131,3 +130,69 @@ slopes <- map_dbl(coefs, 2)
 
 slopes
 ```
+
+
+### Function Practice 
+```{r}
+d <- all_safe %>% 
+  select(dataset, schid, c0508, c0510, c0514, outsus06, outsus08, outsus18, c0534, c0536, c0568, c0178, c0180, c0181, c0182, c0192, c0194, c0196, c0198, c0200, c0202, c0175, c0179, c0186, fr_catmn, fr_lvel, fr_urban, fr_size)
+
+my_mean <- function(x) {
+  z <- na.omit(x)
+  sum(z) / length(z)
+}
+
+mean_insubordination <- my_mean(d$c0508)
+
+mean(d$c0508, na.rm = TRUE)
+
+
+level_proportion <- function(x) {
+  map_dbl(split(x, x), length) / length(x)
+}
+
+insubordination_suspension_proportion <- level_proportion(d$c0514)
+
+z_distribution <- function(x) {
+  (x - mean(x, na.rm = TRUE)) / 
+  sd(x, na.rm = TRUE) 
+}
+
+z_dstr_oss06 <- z_distribution(d$outsus06)
+
+d_tidy_outsus <- d %>% 
+  pivot_longer(
+    cols = c(outsus06, outsus08, outsus18),
+    names_to = "suspensions",
+    values_to = "outsus"
+  )
+
+suspension_size <- d_tidy_outsus %>% 
+  group_by(dataset, schid, outsus, fr_size) %>% 
+  nest()
+
+size_model <- function(df) {
+  lm(outsus ~ fr_size, data = df)
+}
+
+suspension_size <- suspension_size %>% 
+  mutate(model = map(data, size_model))
+
+#couldn't get this to run properly because outsus column couldn't be identified 
+
+
+# percentage of students likely to go to college - c0534
+
+college_size <- d %>% 
+  group_by(dataset, schid, c0534, fr_size) %>% 
+  nest()
+
+size_college_model <- function(df) {
+  lm(c0534 ~ fr_size, data = df)
+}
+
+college_size <- college_size %>% 
+  mutate(model = map(data, size_college_model))
+```
+
+
