@@ -6,30 +6,161 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 ```
 
 # Preliminary Ideas
 
-```{r}
+```{r download data function}
 library(tidyverse)
-library(psych)
+library(here)
+library(rio)
+
+# Links are all the same, not sure why its not working
+
+download_github <- function(year) {
+  file <- glue::glue('https://raw.githubusercontent.com/Jim-Wright90/spring2020_finalproj/master/data/safe{year}.csv')
+  rio::import(file, setclass = "tibble")
+}
+
+download_github(08)
+
+# data only downloads from the 2017-2018 year
+
+data <- map_df(c(06, 08, 18), ~download_github(.x))
+
+
+download <- function(df1, df2, df3) {
+  df1 <- readr::read_csv('https://raw.githubusercontent.com/Jim-Wright90/spring2020_finalproj/master/data/safe06.csv') %>% 
+  dplyr::select(-X1)
+  
+  df2 <- readr::read_csv('https://raw.githubusercontent.com/Jim-Wright90/spring2020_finalproj/master/data/safe08.csv') %>% 
+  dplyr::select(-X1)
+  
+  df3 <- readr::read_csv('https://raw.githubusercontent.com/Jim-Wright90/spring2020_finalproj/master/data/safe18.csv') %>% 
+  dplyr::select(-X1)
+  
+  bind_rows("05-06 Survey" = df1, 
+                      "07-08 Survey" = df2, 
+                      "17-18 Survey" = df3, 
+                      .id = "dataset")
+}
+
+d <- download()
+
 ```
 
+```{r two variants of map used}
+
+```
+
+```{r walk reduce or modify used}
+
+```
+
+```{r parallel iteration}
+
+```
+
+```{r nest and mutate}
+
+```
+
+
+```{r two functions}
+names(d)
+str(d)
+
+ggplot(d, aes(ic0290, c0534)) +
+  geom_point() +
+  geom_smooth(se = FALSE, method = 'lm')
+
+# install.packages('ggridges')
+
+library(ggridges)
+
+ggplot(d, aes(fr_urban, c0534)) +
+  geom_point(alpha = .4, color = 'gray70') +
+  geom_boxplot() +
+  coord_flip()
+
+ggplot(d, aes(x = c0534, y = fr_urban, fill = fr_urban)) +
+  geom_density_ridges(alpha = .4) +
+  viridis::scale_fill_viridis(discrete = TRUE)
+
+```
 
 ```{r}
-safe06 <- safe06 %>% 
-  dplyr::select(-c0016_r)
+numeric_plot <- function(df, x, y){
+  plot_num <- ggplot({{df}}, aes({{x}}, {{y}})) +
+      geom_point(alpha = .4, color = 'gray70') +
+      geom_smooth(method = 'lm')
+  
+  if(!as.numeric({{x}}) & !as.numeric({{y}})){
+    stop()
+  }
+  else{
+    plot_num
+  }
+  return(plot_num)
+}
 
-safe08 <- safe08 %>% 
-  dplyr::select(-c0016_r)
+numeric_plot(d, d$c0534, d$c0536)
+  
+# might be able to nest data and group_by to the various years 
+density_plot <- function(df, x, y, fill){
+  plot_cat <- ggplot({{df}}, aes({{x}}, {{y}}, {{fill}})) +
+  geom_density_ridges()
+  
+  if(!as.numeric({{x}}) & !as.numeric({{y}})){
+    stop()
+  }
+  else{
+    plot_cat
+  }
+return(plot_cat)
+}
 
-safe06$year <- c('2005-2006')
+density_plot(d, d$c0534, d$fr_urban) + 
+  geom_density_ridges(alpha = .4, aes(fill = d$fr_urban)) +
+  viridis::scale_fill_viridis(discrete = TRUE)
 
-safe08$year <- c('2007-2008')
 
-all <- full_join(safe06, safe08)
+# need a way to figure out how to look at either variable by choosing from the previous two functions
+plot_choice <- function(df, x, y){
+  if(density_plot){
+    return(density_plot)
+  }
+  else{
+    numeric_plot
+  }
+}
+
+plot_choice(d, d$c0534, d$fr_size)
 ```
+
+
+```{r accessible through web}
+
+```
+
+
+
+# Grading Rubric
+
+No code is used repetitively (no more than twice) [10 points]
+More than one variant of purrr::map is used [10 points]
+At least one {purrr} function outside the basic map family (walk_*, reduce, modify_*, etc.) [10 points]
+At least one instance of parallel iteration (e.g., map2_*, pmap_*) [10 points]
+At least one use case of purrr::nest %>% mutate() [10 points]
+At least two custom functions [20 points; 10 points each]
+Each function must do exactly one thing
+The functions may replicate the behavior of a base function - as noted above this is about practicing the skills you learn in class
+Code is fully reproducible and housed on GitHub [10 points]
+No obvious errors in chosen output format [10 points]
+Deployed on the web and shareable through a link [10 points]
+
+
 
 Since we discussed creating models, it might be easier to create scatterplots showing the associations and then have a visual next to it that shows the strength of the correlation. Then our audience can check the listed predictors on a dropdown menu and the outcomes to see each of the associations in scatterpots. Just an idea. 
 
