@@ -48,26 +48,43 @@ download <- function(df1, df2, df3) {
 
 d <- download()
 
+files <- dir_ls(here::here("data"), glob = "*.csv")
+
+batch <- map_df(files, read_csv)
+batch
+
+names(batch)
+
+batch %>% 
+  select(c0578_yy)
 ```
 
 ```{r two variants of map used}
+#Jim
+by_year <- split(d, d$dataset) %>% 
+  map(~lm(c0534 ~ fr_urban, data = .x)) %>% 
+  map(coef) %>% 
+  map_dbl(2)
 
-```
+str(by_year)
 
-```{r walk reduce or modify used}
 
 ```
 
 ```{r parallel iteration}
-
+#Thuy
 ```
 
 ```{r nest and mutate}
-
+#Claire
 ```
 
+```{r walk reduce or modify used}
+#Jim
+```
 
 ```{r two functions}
+#JP
 names(d)
 str(d)
 
@@ -141,7 +158,7 @@ plot_choice(d, d$c0534, d$fr_size)
 
 
 ```{r accessible through web}
-
+#All of us! 
 ```
 
 
