@@ -16,6 +16,7 @@ library(tidyverse)
 library(here)
 library(rio)
 library(fs)
+devtools::install_github("gadenbuie/regexplain")
 
 # Links are all the same, not sure why its not working
 
@@ -56,8 +57,58 @@ batch
 
 names(batch)
 
+
 batch %>% 
   select(c0578_yy)
+```
+
+```{r spss data}
+#Jim
+safe06 <- import(here("spss_files", "2006_school_safety.sav"),
+               setclass = "tbl_df") %>% 
+  characterize() %>% 
+  janitor::clean_names() 
+
+safe08 <- import(here('spss_files', '2008_school_safety.sav'),
+                 setclass = 'tbl_df') %>% 
+  characterize() %>% 
+  janitor::clean_names()
+
+safe18 <- import(here('spss_files', '2018_school_safety.sav'),
+                 setclass = 'tbl_df') %>% 
+  characterize() %>% 
+  janitor::clean_names()
+
+all_safe <- bind_rows("05-06" = safe06, 
+                      "07-08" = safe08, 
+                      "17-18" = safe18, 
+                      .id = "dataset")
+
+head(all_safe)
+
+all_safe <- all_safe %>% 
+  select(dataset, schid, c0508, c0510, c0514, outsus06, outsus08, outsus18, c0534, c0536, c0568, c0178, c0180, c0181, c0182, c0192, c0194, c0196, c0198, c0200, c0202, c0175, c0179, c0186, fr_catmn, fr_lvel, fr_urban, fr_size)
+
+```
+
+```{r map df work}
+#Jim
+batch2 <- map_df(files, read_csv, .id = "file")
+batch2
+
+batch2 %>%
+    count(file)
+
+batch2 <- batch2 %>%
+    mutate(file = str_replace_all(file, here::here("data"), ""))
+count(batch2, file)
+
+head(batch2)
+
+batch2 %>%
+    mutate(year = str_replace_all(file, "/safe")) %>%
+    select(file, year)
+##Can't figure out the regular expression piece 
 ```
 
 ```{r two variants of map used}
@@ -69,7 +120,76 @@ by_year <- split(d, d$dataset) %>%
 
 str(by_year)
 
+plots <- tibble(sid = names(by_year),
+                slope = by_year)
 
+ggplot(plots, aes(slope)) +
+  geom_histogram(fill = "blue",
+                 color = "white") +
+  geom_vline(xintercept = mean(by_year, na.rm = TRUE),
+             color = "magenta",
+             lwd = 2) +
+  theme_minimal()
+
+```
+
+```{r map variation 2}
+#Jim
+str(all_safe)
+
+splt_year <- split(all_safe, all_safe$dataset)
+str(splt_year)
+
+by_yr <- all_safe %>% 
+  nest(-dataset)
+by_yr
+
+str(by_yr$data)
+
+map_dbl(by_yr$data, nrow)
+
+map_dbl(by_yr$data, ncol)
+
+map_dbl(by_yr$data, ~mean(.x$c0534))
+
+by_yr %>%
+    mutate(n = map_dbl(data, nrow))
+
+by_yr %>%
+    mutate(m1 = map(data, ~lm(c0534 ~ fr_urban, data = .x)),
+         coefs = map(m1, coef))
+
+mods <- by_yr %>% 
+  mutate(m1 = map(data, ~lm(c0534 ~ fr_urban, data = .x)),
+         m2 = map(data, ~lm(c0534 ~ fr_size, data = .x)),
+         m3 = map(data, ~lm(c0534 ~ fr_urban + fr_size, data = .x)))
+mods
+mods$m1[[1]]
+mods$m2[[1]]
+
+compare <- anova(mods$m1[[1]], mods$m2[[1]])
+compare
+
+mods %>%
+    mutate(comp12 = map2(m1, m2, anova))
+
+str(compare)
+
+mods %>%
+    pivot_longer(m1:m3, names_to = "model", values_to = "output")
+
+mods %>%
+    gather(model, output, m1:m3) %>%
+    mutate(r2 = map_dbl(output, ~summary(.x)$r.squared))
+
+mods %>%
+    gather(model, output, m1:m3) %>%
+    mutate(r2 = map_dbl(output, ~summary(.x)$r.squared)) %>%
+ggplot(aes(model, r2)) +
+    geom_col(aes(fill = model)) +
+    facet_wrap(~dataset) +
+    guides(fill = "none") +
+    scale_fill_brewer(palette = "Set2")
 ```
 
 ```{r parallel iteration}
