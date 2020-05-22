@@ -15,6 +15,7 @@ knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 library(tidyverse)
 library(here)
 library(rio)
+library(fs)
 
 # Links are all the same, not sure why its not working
 
