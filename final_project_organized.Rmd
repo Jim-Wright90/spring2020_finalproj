@@ -1,0 +1,132 @@
+---
+title: "Organized Shiny Code"
+author: "laire Zhang; JP Pedroza; Thuy Nguyen; Jim Wright"
+date: "5/25/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Background:
+This project will be a shiny app that will provide a quick look into data from three different years of the School Survey on Crime and Safety (05-06, 07-08, 17-18). The app will provide users with all the variables from these datasets that are matched between the different years. We are hoping that this shiny app will be able to provide general associations between continuous variables while being able to choose which year of the dataset the user is interested in as well as looking at differences between categories for any variable of interest. We are currently working on the shiny app and any feedback would be greatly appreciated, especially with the functions as they will be the base for the shiny app.
+
+
+```{r data upload}
+library(tidyverse)
+library(here)
+library(rio)
+library(fs)
+library(ggridges)
+# devtools::install_github("gadenbuie/regexplain")
+
+files <- dir_ls(here::here("data"), glob = "*.csv")
+
+batch <- map_df(files, read_csv)
+batch
+
+batch <- batch %>% 
+  mutate(fr_ubran = as.factor(fr_urban),
+         fr_size = as.factor(fr_size),
+         year = as.factor(c0578_yy))
+```
+
+```{r}
+batch %>% 
+  group_by(year) %>% 
+  nest() %>% 
+  mutate(mean_score = map_dbl(data, ~mean(.x$c0534))) %>% 
+  ggplot(aes(year, mean_score)) +
+  geom_col()
+
+```
+
+```{r parallel iteration}
+comparing <- batch %>% 
+  group_by(year) %>% 
+  nest() %>% 
+  mutate(model_1 = map(data, ~lm(c0534 ~ fr_urban, data = .x)),
+         model_2 = map(data, ~lm(c0534 ~ fr_size, data = .x))) %>% 
+  mutate(model_compare = map2(model_1, model_2, stats::AIC),
+         aic_model_1 = map_dbl(model_compare, list('AIC', 1)),
+         aic_model_2 = map_dbl(model_compare, list('AIC', 2)))
+
+compare_plot <- comparing %>% 
+  dplyr::select(year, aic_model_1, aic_model_2) %>% 
+  pivot_longer(-year, names_to = 'year_AIC', values_to = 'values')
+
+```
+
+```{r nest and mutate}
+models <- batch %>% 
+  group_by(year) %>% 
+  nest() %>% 
+  mutate(model = map(data, ~lm(c0534 ~ c0562, data = .x))) %>% 
+  pivot_longer(model, names_to = 'model', values_to = 'output') %>% 
+  mutate(r2 = map_dbl(output, ~summary(.x)$r.squared))
+
+```
+
+```{r walk reduce or modify used}
+
+
+```
+
+```{r}
+# Function 1
+numeric_plot <- function(df, x, y){
+  plot_num <- ggplot({{df}}, aes({{x}}, {{y}})) +
+      geom_point(alpha = .4, color = 'gray70') +
+      geom_smooth(method = 'lm')
+  
+  if(!as.numeric({{x}}) & !as.numeric({{y}})){
+    stop()
+  }
+  else{
+    plot_num
+  }
+  return(plot_num)
+}
+
+numeric_plot(batch, batch$c0534, batch$c0536) +
+  labs(x = 'X Value',
+       y = 'Y Value',
+       Title = 'A Title',
+       caption = 'R2') +
+  facet_wrap(~year)
+
+```
+
+```{r}
+# Function 2
+bar_plot <- function(df, x, y, fill){
+  plot_cat <- ggplot({{df}}, aes({{x}}, {{y}}, {{fill}})) +
+  geom_col() +
+  coord_flip()
+  
+  if(!as.numeric({{x}}) & !as.numeric({{y}})){
+    stop()
+  }
+  else{
+    plot_cat
+  }
+return(plot_cat)
+}
+
+bar_plot(batch, batch$fr_urban, batch$c0534, fill = batch$fr_urban) +
+  labs(x = 'X Value',
+       y = 'Y Value',
+       Title = 'A Title',
+       caption = 'R2') +
+  facet_wrap(~year)
+
+```
+
+
+
+
+
+
+
+
