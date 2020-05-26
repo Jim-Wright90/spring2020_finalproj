@@ -1,23 +1,22 @@
 ---
-title: "Preliminary Ideas"
-author: "JP"
+title: "EDLD 610 Spring 2020 Final Project"
+author: "Thuy Nguyen, JP Pedroza, Jim Wright, and Claire Zhang"
 date: "4/28/2020"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+library(tidyverse)
+library(here)
+library(rio)
+library(fs)
+# devtools::install_github("gadenbuie/regexplain")
 ```
 
 # Preliminary Ideas
 
 ```{r download data function}
-library(tidyverse)
-library(here)
-library(rio)
-library(fs)
-devtools::install_github("gadenbuie/regexplain")
-
 # Links are all the same, not sure why its not working
 
 download_github <- function(year) {
@@ -196,8 +195,87 @@ ggplot(aes(model, r2)) +
 #Thuy
 ```
 
-```{r nest and mutate}
-#Claire
+
+### Nest and Mutate (Claire Zhang)
+
+I'll use the original four years' datasets (05-06, 07-08, 15-16, 17-18) from the NCES website, https://nces.ed.gov/surveys/ssocs/, and select variables of interest that are available across all four years including urbanicity, school size, percentage of low-performing students, percentage of college-going students, and total numbers of a) incidents reported, b) incidents reported to police, and c) out-of-school suspensions.
+
+step 1, prepare four-year data:
+
+```{r}
+sf06 <- import(here("data_1", "pu_ssocs06_spss.sav"),
+               setclass = "tbl_df") %>%
+        select(urbanicity = FR_LOC4,
+               size = FR_SIZE,
+               low_performing = C0532,
+               college_going = C0534,
+               incidents = INCID06,
+               incidents_police = INCPOL06,
+               suspension = OUTSUS06) %>% 
+        mutate(year = "05-06")
+sf08 <- import(here("data_1", "pu_ssocs08_spss.sav"),
+               setclass = "tbl_df") %>% 
+        select(urbanicity = FR_URBAN,
+               size = FR_SIZE,
+               low_performing = C0532,
+               college_going = C0534,
+               incidents = INCID08,
+               incidents_police = INCPOL08,
+               suspension = OUTSUS08)%>% 
+        mutate(year = "07-08")
+sf16 <- import(here("data_1", "pu_ssocs16.sas7bdat"),
+               setclass = "tbl_df")%>% 
+        select(urbanicity = FR_URBAN,
+               size = FR_SIZE,
+               low_performing = C0532,
+               college_going = C0534,
+               incidents = INCID16,
+               incidents_police = INCPOL16,
+               suspension = OUTSUS16)%>% 
+        mutate(year = "15-16")
+sf18 <- import(here("data_1", "pu_ssocs18.sav"),
+               setclass = "tbl_df")%>% 
+        select(urbanicity = FR_URBAN,
+               size = FR_SIZE,
+               low_performing = C0532,
+               college_going = C0534,
+               incidents = INCID18,
+               incidents_police = INCPOL18,
+               suspension = OUTSUS18)%>% 
+        mutate(year = "17-18")
+four_year <- bind_rows(sf06, sf08, sf16, sf18)%>%
+             pivot_longer(cols = c(incidents, incidents_police, suspension),
+                          names_to = "safty_indicators",
+                          values_to = "total")
+```
+
+step 2, nest by year and visualize school safety, size, and urbanicity
+
+```{r}
+plot_1 <- function(x){
+  x %>% 
+    ggplot(aes(size, total))+
+    geom_col(aes(fill = safty_indicators),
+             position = "dodge")+
+    facet_wrap(~urbanicity)+
+    theme_minimal()+
+    scale_fill_brewer(palette = "Set2")+
+    labs(title = "School Safety, School Size, and Urbanicity",
+         x = "School Size",
+         y = "Total Number")
+}
+
+plot_1(four_year)
+
+by_year <- four_year %>% 
+  group_by(year) %>%
+  nest() %>% 
+  mutate(plot = map(data, ~plot_1(.x)))
+
+by_year$plot[[1]]
+by_year$plot[[2]]
+by_year$plot[[3]]
+by_year$plot[[4]]
 ```
 
 ```{r walk reduce or modify used}
