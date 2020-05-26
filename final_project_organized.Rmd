@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 ---
 title: "Organized Shiny Code"
 author: "Thuy Nguyen, JP Pedroza, Jim Wright, and Claire Zhang"
@@ -231,3 +232,228 @@ plot1_by_year$plot[[4]]
 
 
 
+=======
+---
+title: "Organized Shiny Code"
+author: "Thuy Nguyen, JP Pedroza, Jim Wright, and Claire Zhang"
+date: "5/25/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Background:
+This project will be a shiny app that will provide a quick look into data from three different years of the School Survey on Crime and Safety (05-06, 07-08, 17-18). The app will provide users with all the variables from these datasets that are matched between the different years. We are hoping that this shiny app will be able to provide general associations between continuous variables while being able to choose which year of the dataset the user is interested in as well as looking at differences between categories for any variable of interest. We are currently working on the shiny app and any feedback would be greatly appreciated, especially with the functions as they will be the base for the shiny app.
+
+
+```{r data upload}
+library(tidyverse)
+library(here)
+library(rio)
+library(fs)
+library(ggridges)
+library(glue)
+# devtools::install_github("gadenbuie/regexplain")
+
+files <- dir_ls(here::here("data"), glob = "*.csv")
+
+batch <- map_df(files, read_csv)
+batch
+
+batch <- batch %>% 
+  mutate(fr_ubran = as.factor(fr_urban),
+         fr_size = as.factor(fr_size),
+         year = as.factor(c0578_yy))
+```
+
+```{r}
+batch %>% 
+  group_by(year) %>% 
+  nest() %>% 
+  mutate(mean_score = map_dbl(data, ~mean(.x$c0534))) %>% 
+  ggplot(aes(year, mean_score)) +
+  geom_col()
+
+```
+
+```{r parallel iteration}
+comparing <- batch %>% 
+  group_by(year) %>% 
+  nest() %>% 
+  mutate(model_1 = map(data, ~lm(c0534 ~ fr_urban, data = .x)),
+         model_2 = map(data, ~lm(c0534 ~ fr_size, data = .x))) %>% 
+  mutate(model_compare = map2(model_1, model_2, stats::AIC),
+         aic_model_1 = map_dbl(model_compare, list('AIC', 1)),
+         aic_model_2 = map_dbl(model_compare, list('AIC', 2)))
+
+compare_plot <- comparing %>% 
+  dplyr::select(year, aic_model_1, aic_model_2) %>% 
+  pivot_longer(-year, names_to = 'year_AIC', values_to = 'values')
+
+```
+
+```{r nest and mutate}
+models <- batch %>% 
+  group_by(year) %>% 
+  nest() %>% 
+  mutate(model = map(data, ~lm(c0534 ~ c0562, data = .x))) %>% 
+  pivot_longer(model, names_to = 'model', values_to = 'output') %>% 
+  mutate(r2 = map_dbl(output, ~summary(.x)$r.squared))
+
+```
+
+```{r}
+# Function 1
+numeric_plot <- function(df, x, y){
+  plot_num <- ggplot({{df}}, aes({{x}}, {{y}})) +
+      geom_point(alpha = .4, color = 'gray70') +
+      geom_smooth(method = 'lm')
+  
+  if(!as.numeric({{x}}) & !as.numeric({{y}})){
+    stop()
+  }
+  else{
+    plot_num
+  }
+  return(plot_num)
+}
+
+numeric_plot(batch, batch$c0534, batch$c0536) +
+  labs(x = 'X Value',
+       y = 'Y Value',
+       Title = 'A Title',
+       caption = 'R2') +
+  facet_wrap(~year)
+
+```
+
+```{r}
+# Function 2
+bar_plot <- function(df, x, y, fill){
+  plot_cat <- ggplot({{df}}, aes({{x}}, {{y}}, {{fill}})) +
+  geom_col() +
+  coord_flip()
+  
+  if(!as.numeric({{x}}) & !as.numeric({{y}})){
+    stop()
+  }
+  else{
+    plot_cat
+  }
+return(plot_cat)
+}
+
+bar_plot(batch, batch$fr_urban, batch$c0534, fill = batch$fr_urban) +
+  labs(x = 'X Value',
+       y = 'Y Value',
+       Title = 'A Title',
+       caption = 'R2') +
+  facet_wrap(~year)
+
+```
+
+
+### Nest and Mutate (Claire)
+
+I'll use the original four years' datasets (05-06, 07-08, 15-16, 17-18) downloaded directly from the NCES website, https://nces.ed.gov/surveys/ssocs/, and select variables of interest that are available across the four years. These variables include urbanicity, school size, percentage of low-performing students, percentage of college-going students, and total numbers of a) incidents reported, b) incidents reported to police, and c) out-of-school suspensions.
+
+step 1, prepare four-year data:
+
+```{r}
+sf06 <- import(here("spss_files", "pu_ssocs06_spss.sav"),
+               setclass = "tbl_df") %>%
+        select(urbanicity = FR_LOC4,
+               size = FR_SIZE,
+               low_performing = C0532,
+               college_going = C0534,
+               incidents = INCID06,
+               incidents_police = INCPOL06,
+               suspension = OUTSUS06) %>% 
+        mutate(year = "05-06")
+sf08 <- import(here("spss_files", "pu_ssocs08_spss.sav"),
+               setclass = "tbl_df") %>% 
+        select(urbanicity = FR_URBAN,
+               size = FR_SIZE,
+               low_performing = C0532,
+               college_going = C0534,
+               incidents = INCID08,
+               incidents_police = INCPOL08,
+               suspension = OUTSUS08)%>% 
+        mutate(year = "07-08")
+sf16 <- import(here("spss_files", "pu_ssocs16.sas7bdat"),
+               setclass = "tbl_df")%>% 
+        select(urbanicity = FR_URBAN,
+               size = FR_SIZE,
+               low_performing = C0532,
+               college_going = C0534,
+               incidents = INCID16,
+               incidents_police = INCPOL16,
+               suspension = OUTSUS16)%>% 
+        mutate(year = "15-16")
+sf18 <- import(here("spss_files", "pu_ssocs18.sav"),
+               setclass = "tbl_df")%>% 
+        select(urbanicity = FR_URBAN,
+               size = FR_SIZE,
+               low_performing = C0532,
+               college_going = C0534,
+               incidents = INCID18,
+               incidents_police = INCPOL18,
+               suspension = OUTSUS18)%>% 
+        mutate(year = "17-18")
+four_year <- bind_rows(sf06, sf08, sf16, sf18)%>%
+             pivot_longer(cols = c(incidents, incidents_police, suspension),
+                          names_to = "safty_indicators",
+                          values_to = "total")
+```
+
+step 2, nest by year and visualize school safety, size, and urbanicity
+
+```{r}
+plot_1 <- function(x){
+  x %>% 
+    ggplot(aes(size, total))+
+    geom_col(aes(fill = safty_indicators),
+             position = "dodge")+
+    facet_wrap(~urbanicity)+
+    theme_minimal()+
+    scale_fill_brewer(palette = "Set2")+
+    labs(title = "School Safety, School Size, and Urbanicity",
+         x = "School Size",
+         y = "Total Number",
+         fill = "Safety Indicators")
+}
+
+plot_1(four_year)
+
+by_year <- four_year %>% 
+  group_by(year) %>%
+  nest() %>% 
+  mutate(plot = map(data, ~plot_1(.x)))
+
+by_year$plot[[1]]
+by_year$plot[[2]]
+by_year$plot[[3]]
+by_year$plot[[4]]
+```
+
+
+step 3, visualize school safety, low-performing students, and college-going students
+
+
+```{r walk reduce or modify used}
+
+fs::dir_create(here::here("plots_1", "indicators"))
+
+
+files <- by_year$year
+paths <- here::here("plots_1", "indicators", glue("{files}.png"))
+paths
+
+walk2(paths, by_year$plot, ggsave,
+      width = 9.5, 
+      height = 6.5,
+      dpi = 500)
+```
+>>>>>>> Stashed changes
