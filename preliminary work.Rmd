@@ -212,7 +212,7 @@ sf06 <- import(here("data_1", "pu_ssocs06_spss.sav"),
                incidents = INCID06,
                incidents_police = INCPOL06,
                suspension = OUTSUS06) %>% 
-        mutate(year = "05-06")
+        mutate(year = "2006")
 sf08 <- import(here("data_1", "pu_ssocs08_spss.sav"),
                setclass = "tbl_df") %>% 
         select(urbanicity = FR_URBAN,
@@ -222,7 +222,7 @@ sf08 <- import(here("data_1", "pu_ssocs08_spss.sav"),
                incidents = INCID08,
                incidents_police = INCPOL08,
                suspension = OUTSUS08)%>% 
-        mutate(year = "07-08")
+        mutate(year = "2008")
 sf16 <- import(here("data_1", "pu_ssocs16.sas7bdat"),
                setclass = "tbl_df")%>% 
         select(urbanicity = FR_URBAN,
@@ -232,7 +232,7 @@ sf16 <- import(here("data_1", "pu_ssocs16.sas7bdat"),
                incidents = INCID16,
                incidents_police = INCPOL16,
                suspension = OUTSUS16)%>% 
-        mutate(year = "15-16")
+        mutate(year = "2016")
 sf18 <- import(here("data_1", "pu_ssocs18.sav"),
                setclass = "tbl_df")%>% 
         select(urbanicity = FR_URBAN,
@@ -242,41 +242,64 @@ sf18 <- import(here("data_1", "pu_ssocs18.sav"),
                incidents = INCID18,
                incidents_police = INCPOL18,
                suspension = OUTSUS18)%>% 
-        mutate(year = "17-18")
+        mutate(year = "2018")
 four_year <- bind_rows(sf06, sf08, sf16, sf18)%>%
-             pivot_longer(cols = c(incidents, incidents_police, suspension),
-                          names_to = "safty_indicators",
-                          values_to = "total")
+  pivot_longer(cols = c(incidents, incidents_police, suspension),
+                          names_to = "safety_indicators",
+                          values_to = "total") %>% 
+  mutate(urbanicity = recode(urbanicity, '1' = "City", '2' = "Suburb", '3' = "Town", '4' = "Rural"),
+         size = recode(size, '1' = "<300", '2' = "300-499", '3' = "500-999", '4' = "1,000+"),
+         size = fct_relevel(size, "<300", "300-499", "500-999", "1,000+"))
+
 ```
 
-step 2, nest by year and visualize school safety, size, and urbanicity
+step 2, inspect the four year data
 
 ```{r}
-plot_1 <- function(x){
-  x %>% 
+full_plot1 <- four_year %>%
+  group_by(year, safety_indicators) %>% 
+  mutate(mean = mean(total)) %>% 
+  ungroup() %>% 
+  mutate(year = readr::parse_number(year)) %>% 
+  ggplot(aes(year, mean))+
+  geom_line(aes(color = safety_indicators), size = 0.9)+
+  geom_point()+
+  labs(title = "School Safety from 2006 to 2018",
+       x = "School Year",
+       y = "Average Number of Cases in School")
+
+full_plot1
+```
+
+step 3, nest by year and visualize school safety, size, and urbanicity
+
+```{r}
+plot1 <- function(x){
+  x %>%
     ggplot(aes(size, total))+
-    geom_col(aes(fill = safty_indicators),
+    geom_col(aes(fill = safety_indicators),
              position = "dodge")+
     facet_wrap(~urbanicity)+
     theme_minimal()+
     scale_fill_brewer(palette = "Set2")+
     labs(title = "School Safety, School Size, and Urbanicity",
          x = "School Size",
-         y = "Total Number")
+         y = "Total Number of Cases")
 }
 
-plot_1(four_year)
+plot1(four_year)
 
-by_year <- four_year %>% 
+plot1_by_year <- four_year %>% 
   group_by(year) %>%
   nest() %>% 
-  mutate(plot = map(data, ~plot_1(.x)))
+  mutate(plot = map(data, ~plot1(.x)))
 
-by_year$plot[[1]]
-by_year$plot[[2]]
-by_year$plot[[3]]
-by_year$plot[[4]]
+plot1_by_year$plot[[1]]
+plot1_by_year$plot[[2]]
+plot1_by_year$plot[[3]]
+plot1_by_year$plot[[4]]
 ```
+
 
 ```{r walk reduce or modify used}
 #Jim
