@@ -40,6 +40,8 @@ batch %>%
   ggplot(aes(year, mean_score)) +
   geom_col()
 
+#JW strength: great example of using map_dbl to loop through to get the mean and then plot! I'm still wrapping my head around using map_dbl() and this was helpful to see how you can use it in concert with mutate to create new columns and then visualize them. 
+
 ```
 
 ```{r parallel iteration}
@@ -92,6 +94,10 @@ numeric_plot(batch, batch$c0534, batch$c0536) +
        caption = 'R2') +
   facet_wrap(~year)
 
+#JW suggestion: you could write your desired lables into the function itself, rather than when you call the function? 
+
+#JW something I learned: This is super helpful for me to see! I've also tried writing a function to create plots, and one thing I always forget is to assign an object and call return(that_object) within the function, as you've done on line 75. 
+
 ```
 
 ```{r}
@@ -117,6 +123,8 @@ bar_plot(batch, batch$fr_urban, batch$c0534, fill = batch$fr_urban) +
        caption = 'R2') +
   facet_wrap(~year)
 
+# JW strength: I'm super impressed with your use of conditions in your functions! Makes sense to require that both x and y data are numeric in order to run the function. 
+
 ```
 
 
@@ -138,6 +146,7 @@ sf06 <- import(here("data_1", "pu_ssocs06_spss.sav"),
                incidents_police = INCPOL06,
                suspension = OUTSUS06) %>% 
         mutate(year = "2006")
+
 sf08 <- import(here("data_1", "pu_ssocs08_spss.sav"),
                setclass = "tbl_df") %>% 
         select(urbanicity = FR_URBAN,
@@ -148,6 +157,7 @@ sf08 <- import(here("data_1", "pu_ssocs08_spss.sav"),
                incidents_police = INCPOL08,
                suspension = OUTSUS08)%>% 
         mutate(year = "2008")
+
 sf16 <- import(here("data_1", "pu_ssocs16.sas7bdat"),
                setclass = "tbl_df")%>% 
         select(urbanicity = FR_URBAN,
@@ -158,6 +168,7 @@ sf16 <- import(here("data_1", "pu_ssocs16.sas7bdat"),
                incidents_police = INCPOL16,
                suspension = OUTSUS16)%>% 
         mutate(year = "2016")
+
 sf18 <- import(here("data_1", "pu_ssocs18.sav"),
                setclass = "tbl_df")%>% 
         select(urbanicity = FR_URBAN,
@@ -168,13 +179,28 @@ sf18 <- import(here("data_1", "pu_ssocs18.sav"),
                incidents_police = INCPOL18,
                suspension = OUTSUS18)%>% 
         mutate(year = "2018")
+
 four_year <- bind_rows(sf06, sf08, sf16, sf18)%>%
   pivot_longer(cols = c(incidents, incidents_police, suspension),
                           names_to = "safety_indicators",
                           values_to = "total") %>% 
-  mutate(urbanicity = recode(urbanicity, '1' = "City", '2' = "Suburb", '3' = "Town", '4' = "Rural"),
-         size = recode(size, '1' = "<300", '2' = "300-499", '3' = "500-999", '4' = "1,000+"),
-         size = fct_relevel(size, "<300", "300-499", "500-999", "1,000+"))
+  mutate(urbanicity = recode(urbanicity, 
+                             '1' = "City", 
+                             '2' = "Suburb", 
+                             '3' = "Town", 
+                             '4' = "Rural"),
+         size = recode(size, 
+                       '1' = "<300", 
+                       '2' = "300-499", 
+                       '3' = "500-999", 
+                       '4' = "1,000+"),
+         size = fct_relevel(size, 
+                            "<300", 
+                            "300-499", 
+                            "500-999", 
+                            "1,000+"))
+
+#JW suggestion: this is very minor, but I added an empty line between your objects. Otherwise it looks to the reader like it's all one action. I also changed the code styling a bit for your recoding so that it's easier to read.
 
 ```
 
@@ -225,6 +251,10 @@ plot1_by_year$plot[[1]]
 plot1_by_year$plot[[2]]
 plot1_by_year$plot[[3]]
 plot1_by_year$plot[[4]]
+
+#JW strength: These plots are so impressive! Facet_wrapping by setting as you've done is interesting. And the way you tried out plot1() on four_year to get an overall plot, and thenn nested your data by year and looped through using your function, is so clever. Acutally, I'm doing something similar in my project and will refer to this as a helpful example! 
+#JW suggestion: I suggest with your function calling your argument something more specific than x. It looks like the input should be the data frame, so on line 227, you could have 'df' instead of 'x', and then again on 228.  
+
 ```
 
 ```{r walk reduce or modify used}
