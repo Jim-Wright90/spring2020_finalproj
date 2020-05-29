@@ -119,6 +119,31 @@ bar_plot(batch, batch$fr_urban, batch$c0534, fill = batch$fr_urban) +
 
 ```
 
+```{r}
+# Code suggested on Function 2 by Asha (as peer review)
+
+bar_plot <- function(df, x, y){
+  plot_cat <- ggplot(df, aes({{x}}, {{y}})) +
+  geom_col(aes(fill = fr_urban)) +
+  coord_flip()
+  
+  if(!as.numeric({{x}}) & !as.numeric({{y}})){
+    stop()
+  }
+  else{
+    plot_cat
+  }
+return(plot_cat)
+}
+
+bar_plot(batch, batch$fr_urban, batch$c0534) +
+labs(x = 'X Value',
+       y = 'Y Value',
+       Title = 'A Title',
+       caption = 'R2') +
+  facet_wrap(~year)
+
+```
 
 
 ### Nest and Mutate (Claire Zhang)
