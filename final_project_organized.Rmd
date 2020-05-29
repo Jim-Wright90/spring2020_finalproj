@@ -5,6 +5,32 @@ date: "5/25/2020"
 output: html_document
 ---
 
+Stephanie Gluck Peer Review 
+
+Area of Strength:
+
+1) I learned about the `readr::parse_number` and thought this was a neat function. I checked out the help documentation for `parse_number` and can see myself using this function in my own work. 
+
+2) I think a shiny app is very fitting for this large dataset as it will allow the audience to select data and visualize trends that they are interested in examining. 
+
+3) I found the idea to incorporate a stop function in the code to check for the structure of the input variable to be really useful and I was curious as to how error messages can be incorporated into shiny app as that would proably be beneficial for the users of the shiny app too. 
+
+What I learned from reviewing the project: 
+
+Similar to the other group's project that I reviewed, it strikes me the sheer amount of data that is generated in a large national education dataset compared to work in my field where the sample sizes are typically much smaller. Given the large amount of data, having function will be immensely helpful at subsetting and looping through a variable of interest such as year in this case. 
+
+Area of Improvement (see codes in their respective code chunk): 
+
+1) I included minor formatting codes for rounding values in your potential output table and wrapped output table in `gt` or `reactable`. Also included code to move the legend to bottom of plot in ggplot. 
+
+2) I noticed there was a stop function included in the custom function (really good idea!) `numeric_plot` and I tried to test the stop function but it appears the plot still ran (it is possible I am not understanding the stop function correctly). I was not sure if this is something important for the shiny app. 
+
+3) It may be informative for the plots in "step 3, nest by year and visualize school safety, size, and urbanicity" to have title that inclues the year. I was not able to come up with a code for this (sorry) but I know that the codes were covered in our "Parallel iterations" lecture. 
+
+
+
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
@@ -54,7 +80,12 @@ comparing <- batch %>%
 
 compare_plot <- comparing %>% 
   dplyr::select(year, aic_model_1, aic_model_2) %>% 
-  pivot_longer(-year, names_to = 'year_AIC', values_to = 'values')
+  pivot_longer(-year, names_to = 'year_AIC', values_to = 'values') %>% 
+  mutate_if(is.numeric, round, 3) # if you want to round your AIC values 
+
+#I am not sure how you were planning to integrate the table into the shiny app but perhaps using gt or reactable could be a way. 
+reactable::reactable(compare_plot)
+gt::gt(compare_plot)
 
 ```
 
@@ -91,6 +122,18 @@ numeric_plot(batch, batch$c0534, batch$c0536) +
        Title = 'A Title',
        caption = 'R2') +
   facet_wrap(~year)
+
+#I tried to plot using non numerics to test the stop function but it seems that the plot still runs (perhaps I am not interpreting the stop criteria correctly), not sure how important this will be for the actual shiny app. 
+numeric_plot(batch, batch$fr_size, batch$fr_urban) +
+  labs(x = 'X Value',
+       y = 'Y Value',
+       Title = 'A Title',
+       caption = 'R2') +
+  facet_wrap(~year)
+
+is.numeric(batch$fr_size)
+is.numeric(batch$fr_urban)
+is.numeric(batch$c0534)
 
 ```
 
@@ -195,6 +238,7 @@ full_plot1 <- four_year %>%
        fill = "Safety Indicators")
 
 full_plot1
+
 ```
 
 step 3, nest by year and visualize school safety, size, and urbanicity
@@ -211,7 +255,8 @@ plot1 <- function(x){
     labs(title = "School Safety, School Size, and Urbanicity",
          x = "School Size",
          y = "Total Number of Cases",
-         fill = "Safety Indicators")
+         fill = "Safety Indicators") +
+    theme(legend.position = "bottom") # if you want to move your legend to the bottom of the plot 
 }
 
 plot1(four_year)
@@ -225,6 +270,8 @@ plot1_by_year$plot[[1]]
 plot1_by_year$plot[[2]]
 plot1_by_year$plot[[3]]
 plot1_by_year$plot[[4]]
+
+
 ```
 
 ```{r walk reduce or modify used}
