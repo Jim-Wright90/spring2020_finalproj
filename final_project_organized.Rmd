@@ -13,6 +13,7 @@ library(rio)
 library(fs)
 library(ggridges)
 library(glue)
+library(reactable)
 # devtools::install_github("gadenbuie/regexplain")
 ```
 
@@ -168,7 +169,7 @@ sf18 <- import(here("data_1", "pu_ssocs18.sav"),
                incidents_police = INCPOL18,
                suspension = OUTSUS18)%>% 
         mutate(year = "2018")
-four_year <- bind_rows(sf06, sf08, sf16, sf18)%>%
+four_year <- bind_rows("05-06" = sf06, "07-08" = sf08, "15-16" = sf16, "17-18" = sf18, .id = "dataset") %>%
   pivot_longer(cols = c(incidents, incidents_police, suspension),
                           names_to = "safety_indicators",
                           values_to = "total") %>% 
@@ -243,3 +244,258 @@ walk2(paths, plot1_by_year$plot, ggsave,
 ```
 
 
+```{r}
+head(four_year)
+
+college_bound_hist <- four_year %>% 
+  group_by(year) %>% 
+  nest() %>% 
+  mutate(plots = pmap(list(year, data), 
+  ~ggplot(..2, aes(college_going)) +
+  geom_histogram(fill = "#56B4E9",
+                color = "black", 
+                alpha = 0.9,
+                bins = 25) +
+  facet_wrap(~urbanicity) +
+  theme_minimal(base_size = 15) +
+  scale_x_continuous("Percentage of Students", labels = function(x) paste0(x, "%")) +
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_line(color = "gray80")) +
+  labs(x = "Percentage of Students College Bound",
+       y = "Total",
+       title = glue("Distribution of School Urbanicity by College Bound Students: {.x}")) +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text = element_text(size = 10),
+        axis.title=element_text(size=10))))
+
+college_bound_hist$plots[[1]]
+college_bound_hist$plots[[4]]
+
+fs::dir_create(here::here("plots", "college_bound_hist"))
+
+
+files <- college_bound_hist$year
+paths <- here::here("plots", "college_bound_hist", glue("{files}.png"))
+paths
+
+walk2(paths, college_bound_hist$plots, ggsave,
+      width = 9.5, 
+      height = 6.5,
+      dpi = 500)
+```
+
+```{r}
+head(four_year)
+
+low_perf_urban <- four_year %>% 
+  group_by(year) %>% 
+  nest() %>% 
+  mutate(plots = pmap(list(year, data), 
+  ~ggplot(..2, aes(low_performing, urbanicity)) +
+  ggridges::geom_density_ridges(color = "white",
+                                fill = "#A9E5C5") +
+  theme_minimal(base_size = 10) +
+  scale_x_continuous("Percentage of Students", labels = function(x) paste0(x, "%")) +
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_line(color = "gray80")) +
+  labs(x = "Percentage of Students", 
+       y = "",
+       title = glue("Distribution of School Urbanicity\n by Students Scoring Below 15th Percentile on Standardized Tests:\n {.x}")) +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text=element_text(size=10),
+        axis.title=element_text(size=10))))
+
+low_perf_urban$plots[[1]]
+low_perf_urban$plots[[2]]
+
+fs::dir_create(here::here("plots", "low_perf_urban"))
+
+
+files <- low_perf_urban$year
+paths <- here::here("plots", "low_perf_urban", glue("{files}.png"))
+paths
+
+walk2(paths, low_perf_urban$plots, ggsave,
+      width = 9.5, 
+      height = 6.5,
+      dpi = 500)
+```
+
+```{r}
+head(four_year)
+
+size_hist <- four_year %>% 
+  group_by(year) %>% 
+  nest() %>% 
+  mutate(plots = pmap(list(year, data), 
+  ~ggplot(..2, aes(college_going)) +
+  geom_histogram(fill = "#56B4E9",
+                color = "black", 
+                alpha = 0.9,
+                bins = 25) +
+  facet_wrap(~size) +
+  theme_minimal(base_size = 15) +
+  scale_x_continuous("Percentage of Students", labels = function(x) paste0(x, "%")) +
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_line(color = "gray80")) +
+  labs(x = "Percentage of Students College Bound",
+       y = "Total",
+       title = glue("Distribution of School Enrollment by College Bound Students: {.x}")) +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text = element_text(size = 10),
+        axis.title=element_text(size=10))))
+
+size_hist$plots[[1]]
+size_hist$plots[[4]]
+
+fs::dir_create(here::here("plots", "size_hist"))
+
+
+files <- size_hist$year
+paths <- here::here("plots", "size_hist", glue("{files}.png"))
+paths
+
+walk2(paths, size_hist$plots, ggsave,
+      width = 9.5, 
+      height = 6.5,
+      dpi = 500)
+```
+
+```{r}
+size_density <- four_year %>% 
+  group_by(year) %>% 
+  nest() %>% 
+  mutate(plots = pmap(list(year, data), 
+  ~ggplot(..2, aes(low_performing, size)) +
+  ggridges::geom_density_ridges(color = "white",
+                                fill = "#A9E5C5") +
+  theme_minimal(base_size = 10) +
+  scale_x_continuous("Percentage of Students", labels = function(x) paste0(x, "%")) +
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_line(color = "gray80")) +
+  labs(x = "Percentage of Students", 
+       y = "",
+       title = glue("Distribution of School Enrollment\n by Students Scoring Below 15th Percentile on Standardized Tests:\n {.x}")) +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text=element_text(size=10),
+        axis.title=element_text(size=10))))
+
+size_density$plots[[1]]
+size_density$plots[[2]]
+
+fs::dir_create(here::here("plots", "size_density"))
+
+
+files <- size_density$year
+paths <- here::here("plots", "size_density", glue("{files}.png"))
+paths
+
+walk2(paths, size_density$plots, ggsave,
+      width = 9.5, 
+      height = 6.5,
+      dpi = 500)
+```
+
+```{r}
+head(batch)
+head(four_year)
+
+r_tbl <- four_year %>% 
+  select(year, urbanicity, size, low_performing, college_going) %>% 
+  reactable(columns = list(
+    year = colDef(name = "Year"),
+    urbanicity = colDef(name = "School Urbanicity"),
+    size = colDef(name = "School Enrollment"),
+    low_performing = colDef(name = "Percentage of Low Performing Students"),
+    college_going = colDef(name = "Percentage of College Bound Students")
+  ),
+   height = 500,
+   striped = TRUE, 
+   compact = TRUE, 
+   outlined = TRUE,
+   searchable = TRUE)
+
+r_tbl
+
+urban_totals <- four_year %>% 
+  group_by(year, urbanicity) %>% 
+  summarize(n=n()) %>% 
+  na.omit() %>% 
+  reactable(columns = list(
+    year = colDef(name = "Year"),
+    urbanicity = colDef(name = "School Urbanicity"),
+    n = colDef(name = "Total")
+  ),
+   height = 500,
+   striped = TRUE, 
+   compact = TRUE, 
+   outlined = TRUE,
+   searchable = TRUE)
+
+urban_totals
+
+size_totals <- four_year %>% 
+  group_by(year, size) %>% 
+  summarize(n=n()) %>% 
+  na.omit() %>% 
+  reactable(columns = list(
+    year = colDef(name = "Year"),
+    size = colDef(name = "School Enrollment"),
+    n = colDef(name = "Total")
+  ),
+   height = 500,
+   striped = TRUE, 
+   compact = TRUE, 
+   outlined = TRUE,
+   searchable = TRUE)
+
+size_totals
+```
+
+```{r}
+head(four_year)
+
+year_ind <- four_year %>% 
+  group_by(year) %>% 
+  nest() %>% 
+  mutate(mod1 = map(data, ~lm(total ~ urbanicity, data = .x)),
+         mod2 = map(data, ~lm(total ~ size, data = .x)))
+
+year_ind$mod1[[1]]
+year_ind$mod2[[1]]
+
+comp <- anova(year_ind$mod1[[1]], year_ind$mod2[[1]])
+comp
+
+year_ind %>% 
+  mutate(comp12 = map2(mod1, mod2, anova))
+
+str(comp)
+
+year_ind %>%
+    pivot_longer(mod1:mod2, names_to = "model", values_to = "output")
+
+year_ind %>%
+    gather(model, output, mod1:mod2) %>%
+    mutate(r2 = map_dbl(output, ~summary(.x)$r.squared))
+
+year_ind %>%
+    gather(model, output, mod1:mod2) %>%
+    mutate(r2 = map_dbl(output, ~summary(.x)$r.squared)) %>%
+ggplot(aes(model, r2)) +
+    geom_col(aes(fill = model)) +
+    facet_wrap(~year) +
+    scale_fill_brewer(palette = "Set2") +
+  labs(x = "Model",
+       y = "r2",
+       title = "Model Comparison",
+       caption = "Mod1: total incidents predicted by school urbanicity\n  Mod2: total incidents predicted by school enrollment") +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text=element_text(size=10),
+        axis.title=element_text(size=10))
+
+```
