@@ -177,6 +177,9 @@ four_year <- bind_rows("05-06" = sf06, "07-08" = sf08, "15-16" = sf16, "17-18" =
          size = recode(size, '1' = "<300", '2' = "300-499", '3' = "500-999", '4' = "1,000+"),
          size = fct_relevel(size, "<300", "300-499", "500-999", "1,000+"))
 
+
+
+
 ```
 
 step 2, inspect the four year data
@@ -492,10 +495,11 @@ ggplot(aes(model, r2)) +
     scale_fill_brewer(palette = "Set2") +
   labs(x = "Model",
        y = "r2",
-       title = "Model Comparison",
+       title = "Total Incidents predicted by Urbanicity vs. School Enrollment",
        caption = "Mod1: total incidents predicted by school urbanicity\n  Mod2: total incidents predicted by school enrollment") +
-  theme(plot.title = element_text(hjust = 0.5),
+  theme(plot.title = element_text(hjust = 0.2),
         axis.text=element_text(size=10),
-        axis.title=element_text(size=10))
+        axis.title=element_text(size=10)) +
+  scale_fill_discrete(name = "Models", labels = c("Urbanicity", "School Enrollment"))
 
 ```
