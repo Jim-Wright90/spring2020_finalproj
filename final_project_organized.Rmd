@@ -301,7 +301,7 @@ college_bound_hist <- four_year %>%
         panel.grid.minor.x = element_blank(),
         panel.grid.major.x = element_line(color = "gray80")) +
   labs(x = "Percentage of Students College Bound",
-       y = "Total", # "Total number of students across areas"?
+       y = "Total number of school", # "Total number of students across areas"?
        title = glue("Distribution of School Urbanicity by College Bound Students: {.x}")) + 
   theme(plot.title = element_text(hjust = 0.5),
         axis.text = element_text(size = 10),
@@ -494,10 +494,6 @@ size_totals <- four_year %>%
 size_totals
 ```
 
-```{r}
-
-```
-
 
 ```{r}
 head(four_year)
@@ -509,8 +505,7 @@ year_ind <- four_year %>%
          mod2 = map(data, ~lm(total ~ size, data = .x)), 
           mod3 = map(data, ~lm(total ~ urbanicity + size, data = .x)))
 
-# Just an experiment: I can imagine that size will affect rate of crime more than urbanicity does, how about control for size?   
-
+# Just an experiment: I can imagine that size will affect rate of crime more than urbanicity does, how about control for size?
 
 year_ind$mod1[[1]]
 year_ind$mod2[[1]]
