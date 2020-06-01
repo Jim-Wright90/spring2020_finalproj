@@ -27,7 +27,7 @@ batch <- map_df(files, read_csv)
 batch
 
 batch <- batch %>% 
-  mutate(fr_ubran = as.factor(fr_urban),
+  mutate(fr_ubran = as.factor(fr_urban), # AGI: is fr_ubran a typo? Did you mean fr_urban? If you don't change it you will have a variable called fr_urban (column 96) that is type character and a variable called fr_ubran that is type factor (column 189).
          fr_size = as.factor(fr_size),
          year = as.factor(c0578_yy))
 ```
@@ -82,7 +82,7 @@ numeric_plot <- function(df, x, y){
   else{
     plot_num
   }
-  return(plot_num)
+  return(plot_num) # AGI: if you want to save space, you could omit this
 }
 
 numeric_plot(batch, batch$c0534, batch$c0536) +
@@ -107,7 +107,7 @@ bar_plot <- function(df, x, y, fill){
   else{
     plot_cat
   }
-return(plot_cat)
+return(plot_cat) # AGI: if you want to save space, you could omit this
 }
 
 bar_plot(batch, batch$fr_urban, batch$c0534, fill = batch$fr_urban) +
@@ -128,7 +128,7 @@ I'll use the original four years' datasets (05-06, 07-08, 15-16, 17-18) from the
 step 1, prepare four-year data:
 
 ```{r}
-sf06 <- import(here("data_1", "pu_ssocs06_spss.sav"),
+sf06 <- import(here("data_1", "pu_ssocs06_spss.sav"), # AGI: you may want to consider reducing this code as is repetitive. You could do a batch load like you did on lines 23 to 33. 
                setclass = "tbl_df") %>%
         select(urbanicity = FR_LOC4,
                size = FR_SIZE,
@@ -200,7 +200,7 @@ full_plot1
 step 3, nest by year and visualize school safety, size, and urbanicity
 
 ```{r}
-plot1 <- function(x){
+plot1 <- function(x){ 
   x %>%
     ggplot(aes(size, total))+
     geom_col(aes(fill = safety_indicators),
@@ -219,7 +219,7 @@ plot1(four_year)
 plot1_by_year <- four_year %>% 
   group_by(year) %>%
   nest() %>% 
-  mutate(plot = map(data, ~plot1(.x)))
+  mutate(plot = map(data, ~plot1(.x))) # AGI: I have added an alternative way of producing these plots using pmap so you could add the year of each plot at the bottom
 
 plot1_by_year$plot[[1]]
 plot1_by_year$plot[[2]]
@@ -242,4 +242,46 @@ walk2(paths, plot1_by_year$plot, ggsave,
       dpi = 500)
 ```
 
+Peer feedback 
+
+* Areas of strength
+
+(1) Super interesting data set, nice find! Sounds great that you want to make this something useful for school administrators. 
+(2) Well organized and readable code. I understood what you did at every step.
+(3) I really liked your full_plot1; is very informative and looks nice. I suggest you set the theme to theme_set(theme_minimal()) if you want an extra pro look. 
+
+* From reviewing your script I learned that you can select and rename variables in the same step just using select(). I will definitely use that in the future! 
+
+* Areas for improvement:
+
+- As per final project guidelines, I suggest you take out repetitive code in lines 131 to 170. I think you should be able to use batch load as you did at the begginning. 
+- I noted some inconsistencies in spacing, you may want to look into that. 
+
+```{r}
+# alternative to lines 203 to 222
+plot_by_year_df <- four_year %>%
+  group_by(year) %>%
+  mutate(label =
+        glue("SSOCS Data from {str_to_title(year)}"))
+
+
+plot_by_year <- plot_by_year_df %>%
+  group_by(year, label) %>%
+  nest() %>%
+  mutate(plots = pmap(list(data, year, label),
+                      ~ ggplot(..1, aes(size, total)) +
+                        geom_col(aes(fill = safety_indicators),
+             position = "dodge")+
+    facet_wrap(~urbanicity)+
+    theme_minimal()+
+    scale_fill_brewer(palette = "Set2")+
+    labs(title = glue("School Safety, School Size, and Urbanicity Year {..2}"),
+         x = "School Size",
+         y = "Total Number of Cases",
+         fill = "Safety Indicators",
+         caption = ..3)))
+
+plot_by_year$plots[[1]]
+plot_by_year$plots[[2]]
+```
 
