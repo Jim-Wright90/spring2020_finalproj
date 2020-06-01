@@ -59,6 +59,12 @@ compare_plot <- comparing %>%
 
 ```
 
+#c0534: Percent students likely to go to college
+#c0536: Percent students academic achievement important
+#c0534: Crime where school located
+
+#Model predicts effects of crime on the likelihood of students go to college. 
+
 ```{r nest and mutate}
 models <- batch %>% 
   group_by(year) %>% 
@@ -66,7 +72,6 @@ models <- batch %>%
   mutate(model = map(data, ~lm(c0534 ~ c0562, data = .x))) %>% 
   pivot_longer(model, names_to = 'model', values_to = 'output') %>% 
   mutate(r2 = map_dbl(output, ~summary(.x)$r.squared))
-
 ```
 
 
@@ -92,6 +97,7 @@ numeric_plot(batch, batch$c0534, batch$c0536) +
        Title = 'A Title',
        caption = 'R2') +
   facet_wrap(~year)
+
 
 ```
 
@@ -226,7 +232,39 @@ plot1_by_year$plot[[1]]
 plot1_by_year$plot[[2]]
 plot1_by_year$plot[[3]]
 plot1_by_year$plot[[4]]
+
 ```
+
+```{r iteration}
+#tried but failed
+# creating label
+#want to iterate the year above
+
+tmpt_data <- four_year %>% 
+  group_by(year) %>% 
+  nest() %>% 
+  mutate(label = 
+           glue("Year {str_to_title(year)}"))
+
+# creat plot for 4 years - tried but failed
+final_plot <- tmpt %>% 
+  group_by(year, label) %>% 
+  nest() %>% 
+  mutate(plots = pmap(list(tmpt_data, label),
+                      ~ggplot(..1, aes(size, total))+
+                        geom_col(aes(fill = safety_indicators),
+                         position = "dodge")+
+                facet_wrap(~urbanicity)+
+                theme_minimal()+
+                scale_fill_brewer(palette = "Set2")+
+                labs(title = "School Safety, School Size, and Urbanicity",
+                     x = "School Size",
+                     y = "Total Number of Cases",
+                     fill = "Safety Indicators",
+                     caption = ..2)))
+```
+
+
 
 ```{r walk reduce or modify used}
 
