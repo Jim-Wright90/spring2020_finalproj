@@ -284,14 +284,14 @@ walk2(paths, plot1_by_year$plot, ggsave,
 
 ```{r}
 head(four_year)
-
+# i'm trying to understand what "collage bound" is 
 college_bound_hist <- four_year %>% 
   group_by(year) %>% 
   nest() %>% 
   mutate(plots = pmap(list(year, data), 
   ~ggplot(..2, aes(college_going)) +
   geom_histogram(fill = "#56B4E9",
-                color = "black", 
+                color = "white", 
                 alpha = 0.9,
                 bins = 25) +
   facet_wrap(~urbanicity) +
@@ -301,8 +301,8 @@ college_bound_hist <- four_year %>%
         panel.grid.minor.x = element_blank(),
         panel.grid.major.x = element_line(color = "gray80")) +
   labs(x = "Percentage of Students College Bound",
-       y = "Total",
-       title = glue("Distribution of School Urbanicity by College Bound Students: {.x}")) +
+       y = "Total", # "Total number of students across areas"?
+       title = glue("Distribution of School Urbanicity by College Bound Students: {.x}")) + 
   theme(plot.title = element_text(hjust = 0.5),
         axis.text = element_text(size = 10),
         axis.title=element_text(size=10))))
@@ -370,7 +370,7 @@ size_hist <- four_year %>%
   mutate(plots = pmap(list(year, data), 
   ~ggplot(..2, aes(college_going)) +
   geom_histogram(fill = "#56B4E9",
-                color = "black", 
+                color = "white", 
                 alpha = 0.9,
                 bins = 25) +
   facet_wrap(~size) +
@@ -495,18 +495,28 @@ size_totals
 ```
 
 ```{r}
+
+```
+
+
+```{r}
 head(four_year)
 
 year_ind <- four_year %>% 
   group_by(year) %>% 
   nest() %>% 
   mutate(mod1 = map(data, ~lm(total ~ urbanicity, data = .x)),
-         mod2 = map(data, ~lm(total ~ size, data = .x)))
+         mod2 = map(data, ~lm(total ~ size, data = .x)), 
+          mod3 = map(data, ~lm(total ~ urbanicity + size, data = .x)))
+
+# Just an experiment: I can imagine that size will affect rate of crime more than urbanicity does, how about control for size?   
+
 
 year_ind$mod1[[1]]
 year_ind$mod2[[1]]
+year_ind$mod3[[1]]
 
-comp <- anova(year_ind$mod1[[1]], year_ind$mod2[[1]])
+comp <- anova(year_ind$mod1[[1]], year_ind$mod2[[1]], year_ind$mod3[[1]])
 comp
 
 year_ind %>% 
@@ -515,14 +525,14 @@ year_ind %>%
 str(comp)
 
 year_ind %>%
-    pivot_longer(mod1:mod2, names_to = "model", values_to = "output")
+    pivot_longer(mod1:mod3, names_to = "model", values_to = "output")
 
 year_ind %>%
-    gather(model, output, mod1:mod2) %>%
+    gather(model, output, mod1:mod3) %>%
     mutate(r2 = map_dbl(output, ~summary(.x)$r.squared))
 
 year_ind %>%
-    gather(model, output, mod1:mod2) %>%
+    gather(model, output, mod1:mod3) %>%
     mutate(r2 = map_dbl(output, ~summary(.x)$r.squared)) %>%
 ggplot(aes(model, r2)) +
     geom_col(aes(fill = model)) +
@@ -531,7 +541,7 @@ ggplot(aes(model, r2)) +
   labs(x = "Model",
        y = "r2",
        title = "Model Comparison",
-       caption = "Mod1: total incidents predicted by school urbanicity\n  Mod2: total incidents predicted by school enrollment") +
+       caption = "Mod1: total incidents predicted by school urbanicity\n  Mod2: total incidents predicted by school enrollment \n Mod3: total incidents predicted by school urbanicity, controlled for school enrollment") +
   theme(plot.title = element_text(hjust = 0.5),
         axis.text=element_text(size=10),
         axis.title=element_text(size=10))
