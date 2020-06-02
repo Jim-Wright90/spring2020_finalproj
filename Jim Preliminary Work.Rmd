@@ -18,17 +18,17 @@ library(here)
 library(tidyverse)
 library(gt)
 
-safe06 <- import(here("data", "2006_school_safety.sav"),
+safe06 <- import(here("spss_files", "2006_school_safety.sav"),
                setclass = "tbl_df") %>% 
   characterize() %>% 
   janitor::clean_names() 
 
-safe08 <- import(here('data', '2008_school_safety.sav'),
+safe08 <- import(here('spss_files', '2008_school_safety.sav'),
                  setclass = 'tbl_df') %>% 
   characterize() %>% 
   janitor::clean_names()
 
-safe18 <- import(here('data', '2018_school_safety.sav'),
+safe18 <- import(here('spss_files', '2018_school_safety.sav'),
                  setclass = 'tbl_df') %>% 
   characterize() %>% 
   janitor::clean_names()
@@ -136,6 +136,9 @@ slopes
 ```{r}
 d <- all_safe %>% 
   select(dataset, schid, c0508, c0510, c0514, outsus06, outsus08, outsus18, c0534, c0536, c0568, c0178, c0180, c0181, c0182, c0192, c0194, c0196, c0198, c0200, c0202, c0175, c0179, c0186, fr_catmn, fr_lvel, fr_urban, fr_size)
+
+names(d)
+head(d)
 
 my_mean <- function(x) {
   z <- na.omit(x)
