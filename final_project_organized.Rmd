@@ -28,7 +28,7 @@ batch <- map_df(files, read_csv)
 batch
 
 batch <- batch %>% 
-  mutate(fr_ubran = as.factor(fr_urban),
+  mutate(fr_urban = as.factor(fr_urban), # MH comment: 'fr_ubran' seems like it might be a typo but doesnaffect later code
          fr_size = as.factor(fr_size),
          year = as.factor(c0578_yy))
 ```
@@ -69,7 +69,6 @@ models <- batch %>%
 
 ```
 
-
 ```{r}
 # Function 1
 numeric_plot <- function(df, x, y){
@@ -77,10 +76,10 @@ numeric_plot <- function(df, x, y){
       geom_point(alpha = .4, color = 'gray70') +
       geom_smooth(method = 'lm')
   
-  if(!as.numeric({{x}}) & !as.numeric({{y}})){
+  if(!is.numeric({{x}}) & !is.numeric({{y}})){ #MH comment: I think y'all mean to use 'is.numeric()' since 'as.numeric()' throws a warning 
     stop()
   }
-  else{
+  else{  #MH comment: Maybe, to simplify the code, you could use just 'else{}' or 'return()'? I'm not sure if both are needed if they produce the same output but I'm not sure :P
     plot_num
   }
   return(plot_num)
@@ -378,7 +377,7 @@ size_density <- four_year %>%
         panel.grid.minor.x = element_blank(),
         panel.grid.major.x = element_line(color = "gray80")) +
   labs(x = "Percentage of Students", 
-       y = "",
+       y = "School enrollment",  #MH comment: it might be helpful to add a label to the y-axis  
        title = glue("Distribution of School Enrollment\n by Students Scoring Below 15th Percentile on Standardized Tests:\n {.x}")) +
   theme(plot.title = element_text(hjust = 0.5),
         axis.text=element_text(size=10),
