@@ -15,10 +15,19 @@ library(ggridges)
 library(glue)
 # devtools::install_github("gadenbuie/regexplain")
 ```
+```{r brock_review}
+# Three areas of strength: 
+# 1.	Ambitious data set, tons of work already done!
+# 2.	Clean, easy to follow code with good code styling.
+# 3.	Good functions with additional elements like if/else and stops! Nice work!
+# One thing I learned from reviewing the script:
+# 1.	Using fs::dir_create(here::here("plots_1", "indicators")) I thought you would be creating two folders at the root directory (here) level. I did not know “indicators” would be nested inside “plot_1”. Way cool, very useful for the future. Thanks!
+# One area for improvement:
+# 1.	This is a totally minor thing, you did sometimes and not others. A simple title in all code chunks would help me navigate the .rmd a bit more. When you did use a simple title, much like your function labels, they are very informative and help provide a preview of expected behavior in the code. Overall, great job! I see a lot of evidence of the work from the term. Good luck finishing up!
+```
 
 Background:
 This project will be a shiny app that will provide a quick look into data from three different years of the School Survey on Crime and Safety (05-06, 07-08, 17-18). The app will provide users with all the variables from these datasets that are matched between the different years. We are hoping that this shiny app will be able to provide general associations between continuous variables while being able to choose which year of the dataset the user is interested in as well as looking at differences between categories for any variable of interest. We are currently working on the shiny app and any feedback would be greatly appreciated, especially with the functions as they will be the base for the shiny app.
-
 
 ```{r data upload}
 files <- dir_ls(here::here("data"), glob = "*.csv")
@@ -33,39 +42,36 @@ batch <- batch %>%
 ```
 
 ```{r}
-batch %>% 
-  group_by(year) %>% 
-  nest() %>% 
-  mutate(mean_score = map_dbl(data, ~mean(.x$c0534))) %>% 
+batch %>%
+  group_by(year) %>%
+  nest() %>%
+  mutate(mean_score = map_dbl(data, ~mean(.x$c0534))) %>%
   ggplot(aes(year, mean_score)) +
   geom_col()
-
 ```
 
 ```{r parallel iteration}
-comparing <- batch %>% 
-  group_by(year) %>% 
-  nest() %>% 
+comparing <- batch %>%
+  group_by(year) %>%
+  nest() %>%
   mutate(model_1 = map(data, ~lm(c0534 ~ fr_urban, data = .x)),
-         model_2 = map(data, ~lm(c0534 ~ fr_size, data = .x))) %>% 
+         model_2 = map(data, ~lm(c0534 ~ fr_size, data = .x))) %>%
   mutate(model_compare = map2(model_1, model_2, stats::AIC),
          aic_model_1 = map_dbl(model_compare, list('AIC', 1)),
          aic_model_2 = map_dbl(model_compare, list('AIC', 2)))
 
-compare_plot <- comparing %>% 
-  dplyr::select(year, aic_model_1, aic_model_2) %>% 
+compare_plot <- comparing %>%
+  dplyr::select(year, aic_model_1, aic_model_2) %>%
   pivot_longer(-year, names_to = 'year_AIC', values_to = 'values')
-
 ```
 
 ```{r nest and mutate}
-models <- batch %>% 
-  group_by(year) %>% 
-  nest() %>% 
-  mutate(model = map(data, ~lm(c0534 ~ c0562, data = .x))) %>% 
-  pivot_longer(model, names_to = 'model', values_to = 'output') %>% 
+models <- batch %>%
+  group_by(year) %>%
+  nest() %>%
+  mutate(model = map(data, ~lm(c0534 ~ c0562, data = .x))) %>%
+  pivot_longer(model, names_to = 'model', values_to = 'output') %>%
   mutate(r2 = map_dbl(output, ~summary(.x)$r.squared))
-
 ```
 
 
@@ -76,7 +82,7 @@ numeric_plot <- function(df, x, y){
       geom_point(alpha = .4, color = 'gray70') +
       geom_smooth(method = 'lm')
   
-  if(!as.numeric({{x}}) & !as.numeric({{y}})){
+  if (!as.numeric({{x}}) & !as.numeric({{y}})) {
     stop()
   }
   else{
@@ -91,7 +97,6 @@ numeric_plot(batch, batch$c0534, batch$c0536) +
        Title = 'A Title',
        caption = 'R2') +
   facet_wrap(~year)
-
 ```
 
 ```{r}
@@ -101,7 +106,7 @@ bar_plot <- function(df, x, y, fill){
   geom_col() +
   coord_flip()
   
-  if(!as.numeric({{x}}) & !as.numeric({{y}})){
+  if (!as.numeric({{x}}) & !as.numeric({{y}})) {
     stop()
   }
   else{
@@ -116,10 +121,7 @@ bar_plot(batch, batch$fr_urban, batch$c0534, fill = batch$fr_urban) +
        Title = 'A Title',
        caption = 'R2') +
   facet_wrap(~year)
-
 ```
-
-
 
 ### Nest and Mutate (Claire Zhang)
 
@@ -136,59 +138,58 @@ sf06 <- import(here("data_1", "pu_ssocs06_spss.sav"),
                college_going = C0534,
                incidents = INCID06,
                incidents_police = INCPOL06,
-               suspension = OUTSUS06) %>% 
+               suspension = OUTSUS06) %>%
         mutate(year = "2006")
 sf08 <- import(here("data_1", "pu_ssocs08_spss.sav"),
-               setclass = "tbl_df") %>% 
+               setclass = "tbl_df") %>%
         select(urbanicity = FR_URBAN,
                size = FR_SIZE,
                low_performing = C0532,
                college_going = C0534,
                incidents = INCID08,
                incidents_police = INCPOL08,
-               suspension = OUTSUS08)%>% 
+               suspension = OUTSUS08) %>%
         mutate(year = "2008")
 sf16 <- import(here("data_1", "pu_ssocs16.sas7bdat"),
-               setclass = "tbl_df")%>% 
+               setclass = "tbl_df") %>%
         select(urbanicity = FR_URBAN,
                size = FR_SIZE,
                low_performing = C0532,
                college_going = C0534,
                incidents = INCID16,
                incidents_police = INCPOL16,
-               suspension = OUTSUS16)%>% 
+               suspension = OUTSUS16) %>%
         mutate(year = "2016")
 sf18 <- import(here("data_1", "pu_ssocs18.sav"),
-               setclass = "tbl_df")%>% 
+               setclass = "tbl_df") %>%
         select(urbanicity = FR_URBAN,
                size = FR_SIZE,
                low_performing = C0532,
                college_going = C0534,
                incidents = INCID18,
                incidents_police = INCPOL18,
-               suspension = OUTSUS18)%>% 
+               suspension = OUTSUS18) %>%
         mutate(year = "2018")
-four_year <- bind_rows(sf06, sf08, sf16, sf18)%>%
+four_year <- bind_rows(sf06, sf08, sf16, sf18) %>%
   pivot_longer(cols = c(incidents, incidents_police, suspension),
                           names_to = "safety_indicators",
-                          values_to = "total") %>% 
+                          values_to = "total") %>%
   mutate(urbanicity = recode(urbanicity, '1' = "City", '2' = "Suburb", '3' = "Town", '4' = "Rural"),
          size = recode(size, '1' = "<300", '2' = "300-499", '3' = "500-999", '4' = "1,000+"),
          size = fct_relevel(size, "<300", "300-499", "500-999", "1,000+"))
-
 ```
 
 step 2, inspect the four year data
 
 ```{r}
 full_plot1 <- four_year %>%
-  group_by(year, safety_indicators) %>% 
-  mutate(mean = mean(total)) %>% 
-  ungroup() %>% 
-  mutate(year = readr::parse_number(year)) %>% 
-  ggplot(aes(year, mean))+
-  geom_line(aes(color = safety_indicators), size = 0.9)+
-  geom_point()+
+  group_by(year, safety_indicators) %>%
+  mutate(mean = mean(total)) %>%
+  ungroup() %>%
+  mutate(year = readr::parse_number(year)) %>%
+  ggplot(aes(year, mean)) +
+  geom_line(aes(color = safety_indicators), size = 0.9) +
+  geom_point() +
   labs(title = "School Safety from 2006 to 2018",
        x = "School Year",
        y = "Average Number of Cases in School",
@@ -202,12 +203,12 @@ step 3, nest by year and visualize school safety, size, and urbanicity
 ```{r}
 plot1 <- function(x){
   x %>%
-    ggplot(aes(size, total))+
+    ggplot(aes(size, total)) +
     geom_col(aes(fill = safety_indicators),
-             position = "dodge")+
-    facet_wrap(~urbanicity)+
-    theme_minimal()+
-    scale_fill_brewer(palette = "Set2")+
+             position = "dodge") +
+    facet_wrap(~urbanicity) +
+    theme_minimal() +
+    scale_fill_brewer(palette = "Set2") +
     labs(title = "School Safety, School Size, and Urbanicity",
          x = "School Size",
          y = "Total Number of Cases",
@@ -216,9 +217,9 @@ plot1 <- function(x){
 
 plot1(four_year)
 
-plot1_by_year <- four_year %>% 
+plot1_by_year <- four_year %>%
   group_by(year) %>%
-  nest() %>% 
+  nest() %>%
   mutate(plot = map(data, ~plot1(.x)))
 
 plot1_by_year$plot[[1]]
@@ -228,9 +229,7 @@ plot1_by_year$plot[[4]]
 ```
 
 ```{r walk reduce or modify used}
-
 fs::dir_create(here::here("plots_1", "indicators"))
-
 
 files <- plot1_by_year$year
 paths <- here::here("plots_1", "indicators", glue("{files}.png"))
@@ -241,5 +240,3 @@ walk2(paths, plot1_by_year$plot, ggsave,
       height = 6.5,
       dpi = 500)
 ```
-
-
