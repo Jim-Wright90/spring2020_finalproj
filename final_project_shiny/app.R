@@ -17,7 +17,10 @@ library(ggplot2)
 theme_set(theme_minimal(15))
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(
+ui <- navbarPage(
+  "School safety",
+  
+  fluidPage(
 
     # Application title
     titlePanel("School Crime and Safety Survey: 2006, 2008, 2016, 2018"),
@@ -29,7 +32,7 @@ ui <- fluidPage(
     # Shows the plot
     mainPanel(plotOutput('plot'))
 )
-
+)
 
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
