@@ -197,7 +197,6 @@ full_plot1 <- four_year %>%
   ungroup() %>% 
   mutate(as.factor(year = readr::parse_number(year))) %>% # add as.factor to try
   ggplot(aes(year, mean))+
-<<<<<<< Updated upstream
   geom_line(aes(color = safety_indicators), size = 0.9)+
   geom_point() +
   theme(panel.grid.major.y = element_blank(),
@@ -205,10 +204,10 @@ full_plot1 <- four_year %>%
         panel.grid.major.x = element_line(color = "gray80")) +
   scale_x_continuous(limits = c(2004, 2020),
                      breaks = c(2006, 2008, 2010, 2012, 2014, 2016, 2018)) +
-=======
+
   geom_line(aes(color = safety_indicators), size = 0.9)+ # can we change here 
   geom_point()+
->>>>>>> Stashed changes
+
   labs(title = "School Safety from 2006 to 2018",
        x = "School Year",
        y = "Average Number of Cases in School",
@@ -252,6 +251,21 @@ plot1_by_year$plot[[2]]
 plot1_by_year$plot[[3]]
 plot1_by_year$plot[[4]]
 
+
+
+plot06 <- four_year %>% 
+  filter(year == "2006") %>% 
+  ggplot(aes(size, total))+
+    geom_col(aes(fill = safety_indicators),
+             position = "dodge")+
+    facet_wrap(~urbanicity)+
+    theme_minimal()+
+    scale_fill_brewer(palette = "Set2")+
+    labs(title = "School Safety, School Size, and Urbanicity",
+         x = "School Size",
+         y = "Total Number of Cases",
+         fill = "Safety Indicators")
+
 ```
 
 ```{r iteration}
@@ -266,7 +280,7 @@ tmpt_data <- four_year %>%
            glue("Year {str_to_title(year)}"))
 
 # creat plot for 4 years - tried but failed
-final_plot <- tmpt %>% 
+final_plot <- tmpt_data %>% 
   group_by(year, label) %>% 
   nest() %>% 
   mutate(plots = pmap(list(tmpt_data, label),
