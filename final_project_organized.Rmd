@@ -144,7 +144,7 @@ sf06 <- import(here("data_1", "pu_ssocs06_spss.sav"),
                incidents = INCID06,
                incidents_police = INCPOL06,
                suspension = OUTSUS06) %>% 
-        mutate(year = "2006")
+        mutate(year = "2005-2006")
 sf08 <- import(here("data_1", "pu_ssocs08_spss.sav"),
                setclass = "tbl_df") %>% 
         select(urbanicity = FR_URBAN,
@@ -154,7 +154,7 @@ sf08 <- import(here("data_1", "pu_ssocs08_spss.sav"),
                incidents = INCID08,
                incidents_police = INCPOL08,
                suspension = OUTSUS08)%>% 
-        mutate(year = "2008")
+        mutate(year = "2007-2008")
 sf16 <- import(here("data_1", "pu_ssocs16.sas7bdat"),
                setclass = "tbl_df")%>% 
         select(urbanicity = FR_URBAN,
@@ -164,7 +164,7 @@ sf16 <- import(here("data_1", "pu_ssocs16.sas7bdat"),
                incidents = INCID16,
                incidents_police = INCPOL16,
                suspension = OUTSUS16)%>% 
-        mutate(year = "2016")
+        mutate(year = "2015-2016")
 sf18 <- import(here("data_1", "pu_ssocs18.sav"),
                setclass = "tbl_df")%>% 
         select(urbanicity = FR_URBAN,
@@ -174,7 +174,7 @@ sf18 <- import(here("data_1", "pu_ssocs18.sav"),
                incidents = INCID18,
                incidents_police = INCPOL18,
                suspension = OUTSUS18)%>% 
-        mutate(year = "2018")
+        mutate(year = "2017-2018")
 four_year <- bind_rows("05-06" = sf06, "07-08" = sf08, "15-16" = sf16, "17-18" = sf18, .id = "dataset") %>%
   pivot_longer(cols = c(incidents, incidents_police, suspension),
                           names_to = "safety_indicators",
@@ -188,39 +188,26 @@ four_year <- bind_rows("05-06" = sf06, "07-08" = sf08, "15-16" = sf16, "17-18" =
 step 2, inspect the four year data
 
 ```{r}
-head(four_year)
-four_year$year
-
 full_plot1 <- four_year %>%
-  group_by(year, safety_indicators) %>% 
-  mutate(mean = mean(total)) %>% 
-  ungroup() %>% 
-  mutate(as.factor(year = readr::parse_number(year))) %>% # add as.factor to try
-  ggplot(aes(year, mean))+
-<<<<<<< Updated upstream
-  geom_line(aes(color = safety_indicators), size = 0.9)+
-  geom_point() +
-  theme(panel.grid.major.y = element_blank(),
-        panel.grid.minor.x = element_blank(),
-        panel.grid.major.x = element_line(color = "gray80")) +
-  scale_x_continuous(limits = c(2004, 2020),
-                     breaks = c(2006, 2008, 2010, 2012, 2014, 2016, 2018)) +
-=======
-  geom_line(aes(color = safety_indicators), size = 0.9)+ # can we change here 
-  geom_point()+
->>>>>>> Stashed changes
-  labs(title = "School Safety from 2006 to 2018",
-       x = "School Year",
-       y = "Average Number of Cases in School",
-       fill = "Safety Indicators") +
-  theme(plot.title = element_text(hjust = 0.5),
-        axis.text = element_text(size = 10),
-        axis.title=element_text(size=10))
+    group_by(year, safety_indicators) %>% 
+    mutate(mean = mean(total)) %>% 
+    ungroup() %>% 
+    mutate(year = readr::parse_number(year)) %>% 
+    ggplot(aes(year, mean))+
+    geom_line(aes(color = safety_indicators), size = 0.9)+
+    geom_point()+
+    theme(panel.grid.major.y = element_blank(),
+          panel.grid.minor.x = element_blank(),
+          panel.grid.major.x = element_line(color = "gray80"))+
+    scale_x_continuous(limits = c(2004, 2020),
+                       breaks = c(2006, 2008, 2010, 2012, 2014, 2016, 2018))+
+    labs(title = "School Safety from 2006 to 2018",
+         x = "School Year",
+         y = "Average Number of Cases in School",
+         fill = "Safety Indicators")
 
 full_plot1
 
-
-# Thuy: try date time for x axis
 ```
 
 step 3, nest by year and visualize school safety, size, and urbanicity
@@ -245,7 +232,8 @@ plot1(four_year)
 plot1_by_year <- four_year %>% 
   group_by(year) %>%
   nest() %>% 
-  mutate(plot = map(data, ~plot1(.x)))
+  mutate(plot = map2(data, year, ~plot1(.x)+
+                      labs(subtitle = glue("(Surveyed School Year: {.y})"))))
 
 plot1_by_year$plot[[1]]
 plot1_by_year$plot[[2]]
@@ -253,6 +241,7 @@ plot1_by_year$plot[[3]]
 plot1_by_year$plot[[4]]
 
 ```
+
 
 ```{r iteration}
 #tried but failed
