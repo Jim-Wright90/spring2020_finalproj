@@ -153,6 +153,9 @@ ui <- navbarPage(
     )
 )
 
+# I write the server section this way due to the two reasons I personally felt useful:
+# if we put all the code in here, every time we change our code we're risking messting up the huge amount of () and {}.
+# and if we write functions to produce bunch of plots, we cannot put the function in the server section. this way we only need to specify the names of the plots created by the function
 
 server <- function(input, output, session){
   
