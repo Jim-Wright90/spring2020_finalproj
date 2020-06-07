@@ -167,9 +167,9 @@ ui <- navbarPage(
       )
     ),
     tabPanel(
-      "College Going",
+      "College Bound Students",
       fluidPage(
-            sliderInput("bins",
+        sliderInput("bins",
                         "Number of bins:",
                         min = 1,
                         max = 50,
@@ -183,7 +183,27 @@ ui <- navbarPage(
                        "School Size" = "size"
                      ),
                      selected = "none"),
-        plotOutput("ggplot_dist")
+        plotOutput("ggplot_dist"), reactableOutput("dist_smry")
+      )
+    ),
+    tabPanel(
+      "Low Performing Students",
+      fluidPage(
+        sliderInput("bins",
+                    "Number of bins:",
+                    min = 1,
+                    max = 50,
+                    value = 30),
+        radioButtons("var",
+                     "Facet distributions by:",
+                     choices = c(
+                       "None" = "none",
+                       "Year" = "dataset",
+                       "Urbanicity" = "urbanicity",
+                       "School Size" = "size"
+                     ),
+                     selected = "none"),
+        plotOutput("low_perf"), reactableOutput("smry_low_perf")
       )
     )
     )
@@ -234,7 +254,73 @@ server <- function(input, output, session){
       }
       p
     })
+    
+    output$dist_smry <- renderReactable({
+      if(input$var == "none") {
+        four_year_college_going %>%
+          summarize(Mean = mean(college_going),
+                    SD   = sd(college_going),
+                    Min  = min(college_going),
+                    Max  = max(college_going)) %>%
+          mutate_if(is.numeric, round, 2) %>%
+          reactable(rownames = FALSE)
+      }
+      else {
+        four_year_college_going %>% 
+          group_by(!!sym(input$var)) %>% 
+          summarize(Mean = mean(college_going),
+                    SD   = sd(college_going),
+                    Min  = min(college_going),
+                    Max  = max(college_going)) %>% 
+          mutate_if(is.numeric, round, 2) %>% 
+          reactable(rownames = FALSE)
+      }
+    })
         
+    output$low_perf <- renderPlot({
+      
+      p <- ggplot(four_year_college_going, aes(low_performing)) +
+        geom_histogram(bins = input$bins,
+                       fill = "cornflowerblue",
+                       alpha = 0.7,
+                       color = "gray40") +
+        scale_x_continuous("Percentage of Students", labels = function(x) paste0(x, "%")) +
+        theme(panel.grid.major.y = element_blank(),
+              panel.grid.minor.x = element_blank(),
+              panel.grid.major.x = element_line(color = "gray80")) +
+        labs(x = "Percentage of Students",
+             y = "Number of Schools", 
+             title = "Percentage of Students Scoring Below 15th Percentile on Standardized Assessment") 
+      
+      if(input$var != "none") {
+        p <- p +
+          facet_wrap(input$var)
+      }
+      p
+    })
+    
+    output$smry_low_perf <- renderReactable({
+      if(input$var == "none") {
+        four_year_college_going %>%
+          summarize(Mean = mean(low_performing),
+                    SD   = sd(low_performing),
+                    Min  = min(low_performing),
+                    Max  = max(low_performing)) %>%
+          mutate_if(is.numeric, round, 2) %>%
+          reactable(rownames = FALSE)
+      }
+      else {
+        four_year_college_going %>% 
+          group_by(!!sym(input$var)) %>% 
+          summarize(Mean = mean(low_performing),
+                    SD   = sd(low_performing),
+                    Min  = min(low_performing),
+                    Max  = max(low_performing)) %>% 
+          mutate_if(is.numeric, round, 2) %>% 
+          reactable(rownames = FALSE)
+      }
+    })
+    
     }
 
 
