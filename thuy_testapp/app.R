@@ -67,6 +67,9 @@ four_year <- bind_rows("05-06" = sf06, "07-08" = sf08, "15-16" = sf16, "17-18" =
          size = fct_relevel(size, "<300", "300-499", "500-999", "1,000+"))
 
 
+#data import for college going tab
+
+
 # next, we produce plots to be used in the app:
 
 full_plot1 <- four_year %>%
@@ -162,8 +165,30 @@ ui <- navbarPage(
                      selected = "size"),
         plotOutput("plots")
       )
+    ),
+    tabPanel(
+      "College Going",
+      fluidPage(
+            sliderInput("bins",
+                        "Number of bins:",
+                        min = 1,
+                        max = 50,
+                        value = 30),
+        radioButtons("var",
+                     "Facet distributions by:",
+                     choices = c(
+                       "None" = "none",
+                       "Year" = "dataset",
+                       "Urbanicity" = "urbanicity",
+                       "School Size" = "size"
+                     ),
+                     selected = "none"),
+        plotOutput("ggplot_dist")
+      )
     )
     )
+    
+
 
 # I write the server section this way due to the two reasons I personally felt useful:
 # if we put all the code in here, every time we change our code we're risking messting up the huge amount of () and {}.
@@ -182,6 +207,33 @@ server <- function(input, output, session){
     output$sf16 <- renderDT({sf16})
     output$plot18 <- renderPlot({plot18})
     output$sf18 <- renderDT({sf18})
+    
+    four_year_college_going <- four_year %>% 
+      mutate(year = factor(year),
+             urbanicity = factor(urbanicity),
+             size = factor(size))
+    
+    output$ggplot_dist <- renderPlot({
+      
+      p <- ggplot(four_year_college_going, aes(college_going)) +
+        geom_histogram(bins = input$bins,
+                       fill = "cornflowerblue",
+                       alpha = 0.7,
+                       color = "gray40") +
+        scale_x_continuous("Percentage of Students", labels = function(x) paste0(x, "%")) +
+        theme(panel.grid.major.y = element_blank(),
+              panel.grid.minor.x = element_blank(),
+              panel.grid.major.x = element_line(color = "gray80")) +
+        labs(x = "Percentage of Students",
+             y = "Number of Schools", 
+             title = "Percentage of College Bound Students") 
+      
+      if(input$var != "none") {
+        p <- p +
+          facet_wrap(input$var)
+      }
+      p
+    })
         
     }
 
