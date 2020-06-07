@@ -121,37 +121,49 @@ ui <- navbarPage(
     tabPanel(
       "Four Year Overview",
       fluidPage(
-        plotOutput("full_plot1"),
-        plotOutput("full_plot2"),
-        DTOutput("four_year")
-      )
-    ),
+        plotOutput("full_plot1"), plotOutput("full_plot2"), DTOutput("four_year")
+        )
+      ),
     tabPanel(
-        "2005-2006",
-        fluidPage(
-          plotOutput("plot06"),
-          DTOutput("sf06")
+      "2005-2006",
+      fluidPage(
+        plotOutput("plot06"), DTOutput("sf06")
         )
-    ), 
-    tabPanel("2007-2008",
-            fluidPage(
-                plotOutput("plot08"),
-                DTOutput("sf08")
+      ), 
+    tabPanel(
+      "2007-2008",
+      fluidPage(
+        plotOutput("plot08"), DTOutput("sf08")
         )
-    ),
-    tabPanel("2015-2016",
-            fluidPage(
-                plotOutput("plot16"),
-                DTOutput("sf16")
+      ),
+    tabPanel(
+      "2015-2016",
+      fluidPage(
+        plotOutput("plot16"), DTOutput("sf16")
         )
-    ),
-    tabPanel("2017-2018",
-            fluidPage(
-                plotOutput("plot18"),
-                DTOutput("sf18")
+      ),
+    tabPanel(
+      "2017-2018",
+      fluidPage(
+        plotOutput("plot18"), DTOutput("sf18")
         )
+      ),
+    tabPanel(
+      "Correlations",
+      fluidPage(
+        radioButtons("var",
+                     "Factors correlated with school safety:",
+                     choices = c(
+                       "Urbanicity" = "urbanicity",
+                       "School Size" = "size",
+                       "Percentage of Low-Performing Students" = "low_performing",
+                       "Percentage of College-Going Students" = "college_going"
+                     ),
+                     selected = "size"),
+        plotOutput("plots")
+      )
     )
-)
+    )
 
 # I write the server section this way due to the two reasons I personally felt useful:
 # if we put all the code in here, every time we change our code we're risking messting up the huge amount of () and {}.
