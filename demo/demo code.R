@@ -2,6 +2,7 @@ library(tidyverse)
 library(rio)
 library(here)
 
+
 safe06 <- import(here("spss_files", "2006_school_safety.sav"),
                  setclass = "tbl_df") %>% 
   characterize() %>% 
@@ -53,6 +54,10 @@ d <- d %>%
 
 
 head(d)
+
+d_shiny <- all_safe %>% 
+  select(year, schid, c0508, c0510, c0514, outsus06, outsus08, outsus18, c0534, c0568, fr_catmn, fr_lvel, fr_urban, fr_size) %>% 
+  rename(`Percentage of College Bound Students` = c0534)
 
 
 sf06 <- import(here("data_1", "pu_ssocs06_spss.sav"),

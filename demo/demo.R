@@ -35,10 +35,10 @@ ui <- fluidPage(
                    choices = c(
                      "None" = "none",
                      "Year" = "year",
-                     "Percentage of Minority Enrollment" = "Percentage of Minority Enrollment",
-                     "School Level" = "School Level",
-                     "School Urbanicity" = "School Urbanicity",
-                     "Total Enrollment" = "Total Enrollment"
+                     "Percentage of Minority Enrollment" = "fr_catmn",
+                     "School Level" = "fr_lvel",
+                     "School Urbanicity" = "fr_urban",
+                     "Total Enrollment" = "fr_size"
                    ),
                    selected = "none")
     ),
@@ -47,7 +47,7 @@ ui <- fluidPage(
     mainPanel(
       tabsetPanel(
         tabPanel("Plot", plotOutput("ggplot_dist")),
-        tabPanel("Table Summary", dataTableOutput("dist_smry"))
+        tabPanel("Table Summary", reactableOutput("dist_smry"))
       )
     )
   )
@@ -55,16 +55,16 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-  d <- d %>% 
+  d_shiny <- d_shiny %>% 
     mutate(year = factor(year),
-           "Percentage of Minority Enrollment" = factor("Percentage of Minority Enrollment"),
-           "School Level" = factor("School Level"),
-           "School Urbanicity" = factor("School Urbanicity"),
-           "Total Enrollment" = factor("Total Enrollment"))
+           fr_catmn = factor(fr_catmn),
+           fr_urban = factor(fr_urban),
+           fr_lvel = factor(fr_lvel),
+           fr_size = factor(fr_size))
   
   output$ggplot_dist <- renderPlot({
     
-    p <- ggplot(d, aes(`Percentage of College Bound Students`)) +
+    p <- ggplot(d_shiny, aes(`Percentage of College Bound Students`)) +
       geom_histogram(bins = input$bins,
                      fill = "cornflowerblue",
                      alpha = 0.7,
@@ -77,25 +77,25 @@ server <- function(input, output) {
     p
   })
   
-  output$dist_smry <- renderDataTable({
+  output$dist_smry <- renderReactable({
     if(input$var == "none") {
-      d %>%
+      d_shiny %>%
         summarize(Mean = mean(`Percentage of College Bound Students`),
                   SD   = sd(`Percentage of College Bound Students`),
                   Min  = min(`Percentage of College Bound Students`),
                   Max  = max(`Percentage of College Bound Students`)) %>%
         mutate_if(is.numeric, round, 2) %>%
-        datatable(rownames = FALSE)
+        reactable(rownames = FALSE)
     }
     else {
-      d %>% 
+      d_shiny %>% 
         group_by(!!sym(input$var)) %>% 
         summarize(Mean = mean(`Percentage of College Bound Students`),
                   SD   = sd(`Percentage of College Bound Students`),
                   Min  = min(`Percentage of College Bound Students`),
                   Max  = max(`Percentage of College Bound Students`)) %>% 
         mutate_if(is.numeric, round, 2) %>% 
-        datatable(rownames = FALSE)
+        reactable(rownames = FALSE)
     }
   })
 }
