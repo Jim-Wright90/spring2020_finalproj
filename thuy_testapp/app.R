@@ -116,6 +116,18 @@ plot08 <- plot1_by_year$plot[[2]]
 plot16 <- plot1_by_year$plot[[3]]
 plot18 <- plot1_by_year$plot[[4]]
 
+fs::dir_create(here::here("thuy_testapp", "indicators"))
+
+
+files <- plot1_by_year$year
+paths <- here::here("thuy_testapp", "indicators", glue("{files}.png"))
+paths
+
+walk2(paths, plot1_by_year$plot, ggsave,
+      width = 9.5, 
+      height = 6.5,
+      dpi = 500)
+
 
 # finally, we write the app:
 
