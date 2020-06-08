@@ -66,6 +66,10 @@ four_year <- bind_rows("05-06" = sf06, "07-08" = sf08, "15-16" = sf16, "17-18" =
          size = recode(size, '1' = "<300", '2' = "300-499", '3' = "500-999", '4' = "1,000+"),
          size = fct_relevel(size, "<300", "300-499", "500-999", "1,000+"))
 
+by_year <- four_year %>% 
+  group_by(year) %>%
+  nest()
+
 
 #data import for college going tab
 
@@ -103,9 +107,7 @@ plot1 <- function(x){
 
 full_plot2 <- plot1(four_year)
 
-plot1_by_year <- four_year %>% 
-  group_by(year) %>%
-  nest() %>% 
+plot1_by_year <- by_year %>% 
   mutate(plot = map2(data, year, ~plot1(.x)+
                        labs(subtitle = glue("(Surveyed School Year: {.y})"))))
 
@@ -154,16 +156,20 @@ ui <- navbarPage(
     tabPanel(
       "Correlations",
       fluidPage(
-        radioButtons("var",
-                     "Factors correlated with school safety:",
-                     choices = c(
-                       "Urbanicity" = "urbanicity",
-                       "School Size" = "size",
-                       "Percentage of Low-Performing Students" = "low_performing",
-                       "Percentage of College-Going Students" = "college_going"
-                     ),
-                     selected = "size"),
-        plotOutput("plots")
+        sidebarPanel(
+          radioButtons("var",
+                       "Factors correlated with school safety:",
+                       choices = c(
+                         "Urbanicity" = "urbanicity",
+                         "School Size" = "size",
+                         "Percentage of Low-Performing Students" = "low_performing",
+                         "Percentage of College-Going Students" = "college_going"
+                       ),
+                       selected = "size")
+        ),
+        mainPanel(
+          plotOutput("plots")
+        )
       )
     ),
     tabPanel(
@@ -208,12 +214,6 @@ ui <- navbarPage(
     )
     )
     
-
-
-# I write the server section this way due to the two reasons I personally felt useful:
-# if we put all the code in here, every time we change our code we're risking messting up the huge amount of () and {}.
-# and if we write functions to produce bunch of plots, we cannot put the function in the server section. this way we only need to specify the names of the plots created by the function
-
 server <- function(input, output, session){
   
     output$full_plot1 <- renderPlot({full_plot1})
@@ -227,6 +227,12 @@ server <- function(input, output, session){
     output$sf16 <- renderDT({sf16})
     output$plot18 <- renderPlot({plot18})
     output$sf18 <- renderDT({sf18})
+    
+    output$plots <- renderPlot({
+      ggplot(four_year, aes(x = input$var, y = total))+
+        geom_col(color = "cornflowerblue", alpha = 0.7)+
+        facet_wrap(~safety_indicators)
+    })
     
     four_year_college_going <- four_year %>% 
       mutate(year = factor(year),
