@@ -178,7 +178,7 @@ ui <- navbarPage(
                      "Facet distributions by:",
                      choices = c(
                        "None" = "none",
-                       "Year" = "dataset",
+                       "Year" = "year",
                        "Urbanicity" = "urbanicity",
                        "School Size" = "size"
                      ),
