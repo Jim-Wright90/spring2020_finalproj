@@ -7,27 +7,35 @@
 #    http://shiny.rstudio.com/
 #
 
+library(tidyverse)
+library(fs)
 library(shiny)
 library(reactable)
-library(dplyr)
-library(tibble)
-library(tidyr)
-library(ggplot2)
+# library(dplyr)
+# library(tibble)
+# library(tidyr)
+# library(ggplot2)
+library(rlang)
 
-theme_set(theme_minimal(15))
+theme_set(theme_minimal())
 
 files <- dir_ls(here::here("data_1"), glob = "*.csv")
 
 batch <- map_df(files, read_csv)
 
-numeric_plot <- function(data, x, y){
+names(batch)
+map_chr(batch, class)
+
+numeric_plot <- function(data, year, x, y){
   
-  ggplot(data = {{data}}, aes(x = {{x}}, y = {{y}})) +
+  data %>% 
+    filter(year == year) %>%
+  ggplot(aes(x = {{x}}, y = {{y}})) +
     geom_point(alpha = .4, color = 'gray70') +
-    geom_smooth(method = 'lm', aes(color = year), formula = {{y}} ~ {{x}})
+    geom_smooth(method = 'lm')
 }
 
-numeric_plot(batch, c0534, c0536) 
+numeric_plot(batch, year == 2, c0534, c0536) 
 
 # Define UI for application that draws a histogram
 ui <- navbarPage(
@@ -41,6 +49,9 @@ ui <- navbarPage(
     sidebarPanel(
       selectInput(inputId = 'x', label = 'X', choices = names(batch)),
       selectInput(inputId = 'y', label = 'Y', choices = names(batch))),
+    radioButtons(inputId = 'year', 
+                 label = "Academic Year", 
+                 choices = order(unique(batch$year))),
     
     # Shows the plot
     mainPanel(plotOutput('plot'))
@@ -49,7 +60,7 @@ ui <- navbarPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
-  output$plot <- renderPlot(numeric_plot(batch, input$x, input$y))
+  output$plot <- renderPlot(numeric_plot(batch, input$year, input$x, input$y))
 }
 
 
