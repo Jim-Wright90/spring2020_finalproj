@@ -1,5 +1,7 @@
 # Got all the columns with the same names but different years to match for all years
 
+options(digits = 2)
+
 sf06 <- import(here("data_1", "pu_ssocs06_spss.sav"),
                setclass = "tbl_df") %>%
   janitor::clean_names() %>% 
@@ -68,19 +70,40 @@ batch <- batch %>%
 
 
 
-numeric_plot <- function(df, x, y){
-  plot_num <- {{df}} %>% 
-    ggplot(aes({{x}}, {{y}})) +
-    geom_point(alpha = .4, color = 'gray70') +
-    geom_smooth(method = 'lm')
+
+numeric_plot <- function(data, x, y){
+  r2 <- summary(lm(y ~ x, data))
   
-  if(!as.numeric({{x}}) & !as.numeric({{y}})){
-    stop()
-  }
-  else{
-    plot_num
-  }
-  return(plot_num)
+  ggplot(data = {{data}}, aes(x = {{x}}, y = {{y}})) +
+    geom_point(alpha = .4, color = 'gray70') +
+    geom_smooth(method = 'lm', formula = {{y}} ~ {{x}}) +
+    annotate('text', x = 0, y = 0, label = glue('italic(R) ^ 2 == {r2}'), parse = TRUE)
+}
+
+numeric_plot(batch, c0534, c0536)
+
+
+bar_plot <- function(data, group, x, y){
+  data %>% 
+    group_by({{group}}) %>% 
+    mutate(mean_value = mean({{y}})) %>% 
+    ungroup() %>% 
+    ggplot(aes({{x}}, {{y}})) +
+    geom_col()
 }
 
 batch %>% 
+  bar_plot(urbanicity, urbanicity, c0534) +
+  geom_col(aes(fill = urbanicity)) +
+  labs(x = 'X Value',
+       y = 'Y Value',
+       Title = 'A Title',
+       caption = 'R2') +
+  coord_flip() +
+  geom_text(aes(label = round(mean_value, digits = 2)), hjust = -.2, size = 4)
+
+# did not group by year though. Can easily change the function if necessary.
+
+year_plot <- function()
+
+  
