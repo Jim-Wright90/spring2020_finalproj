@@ -69,18 +69,18 @@ batch <- batch %>%
          size = fct_relevel(size, "<300", "300-499", "500-999", "1,000+"))
 
 
-
+model <- lm(c0536 ~ c0534, batch)
+association <- model$coef[2]
 
 numeric_plot <- function(data, x, y){
-  r2 <- summary(lm(y ~ x, data))
-  
+
   ggplot(data = {{data}}, aes(x = {{x}}, y = {{y}})) +
     geom_point(alpha = .4, color = 'gray70') +
-    geom_smooth(method = 'lm', formula = {{y}} ~ {{x}}) +
-    annotate('text', x = 0, y = 0, label = glue('italic(R) ^ 2 == {r2}'), parse = TRUE)
+    geom_smooth(method = 'lm', formula = {{y}} ~ {{x}})
 }
 
-numeric_plot(batch, c0534, c0536)
+numeric_plot(batch, c0534, c0536) +
+  geom_text(x = 0, y = 75, label = association, parse = TRUE, color = 'red')
 
 
 bar_plot <- function(data, group, x, y){
