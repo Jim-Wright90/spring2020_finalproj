@@ -94,8 +94,9 @@ full_plot1 <- four_year %>%
                      breaks = c(2004, 2006, 2008, 2010, 2012, 2014, 2016, 2018))+
   labs(title = "School Safety from 2005 to 2018",
        x = "School Year",
-       y = "Average Number of Cases in School",
-       fill = "Safety Indicators")
+       y = "Average Number of Cases in School") +
+  scale_color_discrete(name = "Safety Indicators", 
+                       labels = c("Incidents", "Incidents reported to police", "Suspension"))
 
 plot1 <- function(x){
   x %>%
@@ -104,11 +105,13 @@ plot1 <- function(x){
              position = "dodge")+
     facet_wrap(~urbanicity)+
     theme_minimal()+
-    scale_fill_brewer(palette = "Set2")+
     labs(title = "School Safety, School Size, and Urbanicity",
          x = "School Size",
-         y = "Total Number of Cases",
-         fill = "Safety Indicators")
+         y = "Total Number of Cases") +
+        scale_fill_brewer(palette = "Set2",
+                      name = "Safety Indicators", 
+                      labels = c("Incidents", "Incidents reported to police", "Suspension"))
+    
 }
 
 full_plot2 <- plot1(four_year)
@@ -140,7 +143,7 @@ create_plot <- function(df, var, input) {
     geom_histogram(bins = input$bins2,
                    fill = "cornflowerblue",
                    alpha = 0.7,
-                   color = "gray40") +
+                   color = "white") +
     scale_x_continuous("Percentage of Students", labels = function(x) paste0(x, "%")) +
     theme(panel.grid.major.y = element_blank(),
           panel.grid.minor.x = element_blank(),
@@ -184,7 +187,7 @@ create_react <- function(df, var, input) {
 
 
 ui <- navbarPage(
-  theme = shinytheme("cerulean"),
+  theme = shinytheme("superhero"),
   "School Crime and Safety Survey (Data Source: https://nces.ed.gov/surveys/ssocs/)",
   
   tabPanel(
@@ -317,7 +320,7 @@ server <- function(input, output, session){
       geom_histogram(bins = input$bins3,
                      fill = "cornflowerblue",
                      alpha = 0.7,
-                     color = "gray40") +
+                     color = "white") +
       scale_x_continuous("Percentage of Students", labels = function(x) paste0(x, "%")) +
       theme(panel.grid.major.y = element_blank(),
             panel.grid.minor.x = element_blank(),
