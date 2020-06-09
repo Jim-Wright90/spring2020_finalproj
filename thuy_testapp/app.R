@@ -156,7 +156,7 @@ create_plot <- function(df, var, input) {
 }
 
 create_react <- function(df, var, input) {
-  if(input$var == "none") {
+  if(input$var2 == "none") {
     df %>% 
       summarize(Mean = mean({{var}}),
                 SD = sd({{var}}),
