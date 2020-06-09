@@ -357,6 +357,46 @@ walk2(paths, college_bound_hist$plots, ggsave,
       dpi = 500)
 ```
 
+```{r hist function}
+ggplot(four_year, aes(college_going)) +
+  geom_histogram(fill = "#56B4E9",
+                color = "white", 
+                alpha = 0.9,
+                bins = 25) +
+  facet_wrap(~urbanicity) +
+  scale_x_continuous("Percentage of Students", labels = function(x) paste0(x, "%")) +
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_line(color = "gray80")) +
+  labs(x = "Percentage of Students College Bound",
+       y = "Number of Schools", 
+       title = "Distribution of Schools") + 
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text = element_text(size = 10),
+        axis.title=element_text(size=10))
+
+hist_plot <- function(df) {
+  ggplot(df, aes(college_going)) +
+  geom_histogram(fill = "#56B4E9",
+                color = "white", 
+                alpha = 0.9,
+                bins = 25) 
+  scale_x_continuous("Percentage of Students", labels = function(x) paste0(x, "%")) +
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_line(color = "gray80")) +
+  labs(x = "Percentage of Students College Bound",
+       y = "Number of Schools", 
+       title = "Distribution of Schools") + 
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text = element_text(size = 10),
+        axis.title=element_text(size=10))
+}
+
+hist_plot(four_year)
+```
+
+
 ```{r}
 head(four_year)
 

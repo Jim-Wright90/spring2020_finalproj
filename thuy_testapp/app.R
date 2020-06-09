@@ -11,6 +11,9 @@ library(DT)
 
 theme_set(theme_minimal(15))
 
+
+
+
 # We draw our analytic data from the four year School Survey on Crime and Safety datasets (05-06, 07-08, 15-16, 17-18), downloaded from the NCES website, https://nces.ed.gov/surveys/ssocs/. 
 # We select variables of interest that are available across all four years. 
 # They are urbanicity, school size, percentage of low-performing students, percentage of college-going students, and total numbers of a) incidents reported, b) incidents reported to police, and c) out-of-school suspensions.
@@ -66,6 +69,10 @@ four_year <- bind_rows("05-06" = sf06, "07-08" = sf08, "15-16" = sf16, "17-18" =
          size = recode(size, '1' = "<300", '2' = "300-499", '3' = "500-999", '4' = "1,000+"),
          size = fct_relevel(size, "<300", "300-499", "500-999", "1,000+"))
 
+by_year <- four_year %>% 
+  group_by(year) %>%
+  nest()
+
 
 #data import for college going tab
 
@@ -103,9 +110,7 @@ plot1 <- function(x){
 
 full_plot2 <- plot1(four_year)
 
-plot1_by_year <- four_year %>% 
-  group_by(year) %>%
-  nest() %>% 
+plot1_by_year <- by_year %>% 
   mutate(plot = map2(data, year, ~plot1(.x)+
                        labs(subtitle = glue("(Surveyed School Year: {.y})"))))
 
@@ -113,6 +118,63 @@ plot06 <- plot1_by_year$plot[[1]]
 plot08 <- plot1_by_year$plot[[2]]
 plot16 <- plot1_by_year$plot[[3]]
 plot18 <- plot1_by_year$plot[[4]]
+
+fs::dir_create(here::here("thuy_testapp", "indicators"))
+
+
+files <- plot1_by_year$year
+paths <- here::here("thuy_testapp", "indicators", glue("{files}.png"))
+paths
+
+walk2(paths, plot1_by_year$plot, ggsave,
+      width = 9.5, 
+      height = 6.5,
+      dpi = 500)
+
+
+create_plot <- function(df, var, input) {
+  p <- ggplot(df, aes({{var}})) +
+    geom_histogram(bins = input$bins2,
+                   fill = "cornflowerblue",
+                   alpha = 0.7,
+                   color = "gray40") +
+    scale_x_continuous("Percentage of Students", labels = function(x) paste0(x, "%")) +
+    theme(panel.grid.major.y = element_blank(),
+          panel.grid.minor.x = element_blank(),
+          panel.grid.major.x = element_line(color = "gray80")) +
+    labs(x = "Percentage of Students",
+         y = "Number of Schools", 
+         title = "Percentage of Students Scoring Below 15th Percentile on Standardized Assessment") 
+  
+  if(input$var2 != "none") {
+    p <- p +
+      facet_wrap(input$var2)
+  }
+  p
+}
+
+create_react <- function(df, var, input) {
+  if(input$var == "none") {
+    df %>% 
+      summarize(Mean = mean({{var}}),
+                SD = sd({{var}}),
+                Min = min({{var}}),
+                Max = max({{var}})) %>% 
+      mutate_if(is.numeric, round, 2) %>% 
+      reactable(rownames = FALSE)
+  }
+  else{
+    df %>% 
+      group_by(!!sym(input$var2)) %>% 
+      summarize(Mean = mean({{var}}),
+                SD = sd({{var}}),
+                Min = min({{var}}),
+                Max = max({{var}})) %>% 
+      mutate_if(is.numeric, round, 2) %>% 
+      reactable(rownames = FALSE)
+  }
+}
+
 
 
 # finally, we write the app:
@@ -154,27 +216,31 @@ ui <- navbarPage(
     tabPanel(
       "Correlations",
       fluidPage(
-        radioButtons("var",
-                     "Factors correlated with school safety:",
-                     choices = c(
-                       "Urbanicity" = "urbanicity",
-                       "School Size" = "size",
-                       "Percentage of Low-Performing Students" = "low_performing",
-                       "Percentage of College-Going Students" = "college_going"
-                     ),
-                     selected = "size"),
-        plotOutput("plots")
+        sidebarPanel(
+          radioButtons("var1",
+                       "Factors correlated with school safety:",
+                       choices = c(
+                         "Urbanicity" = "urbanicity",
+                         "School Size" = "size",
+                         "Percentage of Low-Performing Students" = "low_performing",
+                         "Percentage of College-Going Students" = "college_going"
+                       ),
+                       selected = "size")
+        ),
+        mainPanel(
+          plotOutput("plots")
+        )
       )
     ),
     tabPanel(
       "College Bound Students",
       fluidPage(
-        sliderInput("bins",
+        sliderInput("bins2",
                         "Number of bins:",
                         min = 1,
                         max = 50,
                         value = 30),
-        radioButtons("var",
+        radioButtons("var2",
                      "Facet distributions by:",
                      choices = c(
                        "None" = "none",
@@ -183,18 +249,21 @@ ui <- navbarPage(
                        "School Size" = "size"
                      ),
                      selected = "none"),
-        plotOutput("ggplot_dist"), reactableOutput("dist_smry")
+        tabsetPanel(
+          tabPanel("Plot", plotOutput("ggplot_dist")), 
+          tabPanel("Table", reactableOutput("dist_smry"))
+        )
       )
     ),
     tabPanel(
       "Low Performing Students",
       fluidPage(
-        sliderInput("bins",
+        sliderInput("bins3",
                     "Number of bins:",
                     min = 1,
                     max = 50,
                     value = 30),
-        radioButtons("var",
+        radioButtons("var3",
                      "Facet distributions by:",
                      choices = c(
                        "None" = "none",
@@ -203,17 +272,14 @@ ui <- navbarPage(
                        "School Size" = "size"
                      ),
                      selected = "none"),
-        plotOutput("low_perf"), reactableOutput("smry_low_perf")
+        tabsetPanel(
+        tabPanel("Plot", plotOutput("low_perf")), 
+        tabPanel("Table", reactableOutput("smry_low_perf"))
       )
     )
-    )
+  )
+)
     
-
-
-# I write the server section this way due to the two reasons I personally felt useful:
-# if we put all the code in here, every time we change our code we're risking messting up the huge amount of () and {}.
-# and if we write functions to produce bunch of plots, we cannot put the function in the server section. this way we only need to specify the names of the plots created by the function
-
 server <- function(input, output, session){
   
     output$full_plot1 <- renderPlot({full_plot1})
@@ -228,59 +294,20 @@ server <- function(input, output, session){
     output$plot18 <- renderPlot({plot18})
     output$sf18 <- renderDT({sf18})
     
-    four_year_college_going <- four_year %>% 
-      mutate(year = factor(year),
-             urbanicity = factor(urbanicity),
-             size = factor(size))
-    
-    output$ggplot_dist <- renderPlot({
-      
-      p <- ggplot(four_year_college_going, aes(college_going)) +
-        geom_histogram(bins = input$bins,
-                       fill = "cornflowerblue",
-                       alpha = 0.7,
-                       color = "gray40") +
-        scale_x_continuous("Percentage of Students", labels = function(x) paste0(x, "%")) +
-        theme(panel.grid.major.y = element_blank(),
-              panel.grid.minor.x = element_blank(),
-              panel.grid.major.x = element_line(color = "gray80")) +
-        labs(x = "Percentage of Students",
-             y = "Number of Schools", 
-             title = "Percentage of College Bound Students") 
-      
-      if(input$var != "none") {
-        p <- p +
-          facet_wrap(input$var)
-      }
-      p
+    output$plots <- renderPlot({
+      ggplot(four_year, aes(x = input$var1, y = total))+
+        geom_col(color = "cornflowerblue", alpha = 0.7)+
+        facet_wrap(input$var1)
     })
+ 
+    output$ggplot_dist <- renderPlot(create_plot(four_year, college_going, input))
     
-    output$dist_smry <- renderReactable({
-      if(input$var == "none") {
-        four_year_college_going %>%
-          summarize(Mean = mean(college_going),
-                    SD   = sd(college_going),
-                    Min  = min(college_going),
-                    Max  = max(college_going)) %>%
-          mutate_if(is.numeric, round, 2) %>%
-          reactable(rownames = FALSE)
-      }
-      else {
-        four_year_college_going %>% 
-          group_by(!!sym(input$var)) %>% 
-          summarize(Mean = mean(college_going),
-                    SD   = sd(college_going),
-                    Min  = min(college_going),
-                    Max  = max(college_going)) %>% 
-          mutate_if(is.numeric, round, 2) %>% 
-          reactable(rownames = FALSE)
-      }
-    })
+    output$dist_smry <- renderReactable(create_react(four_year, college_going, input))
         
     output$low_perf <- renderPlot({
       
-      p <- ggplot(four_year_college_going, aes(low_performing)) +
-        geom_histogram(bins = input$bins,
+      p <- ggplot(four_year, aes(low_performing)) +
+        geom_histogram(bins = input$bins3,
                        fill = "cornflowerblue",
                        alpha = 0.7,
                        color = "gray40") +
@@ -292,16 +319,16 @@ server <- function(input, output, session){
              y = "Number of Schools", 
              title = "Percentage of Students Scoring Below 15th Percentile on Standardized Assessment") 
       
-      if(input$var != "none") {
+      if(input$var3 != "none") {
         p <- p +
-          facet_wrap(input$var)
+          facet_wrap(input$var3)
       }
       p
     })
     
     output$smry_low_perf <- renderReactable({
-      if(input$var == "none") {
-        four_year_college_going %>%
+      if(input$var3 == "none") {
+        four_year %>%
           summarize(Mean = mean(low_performing),
                     SD   = sd(low_performing),
                     Min  = min(low_performing),
@@ -310,8 +337,8 @@ server <- function(input, output, session){
           reactable(rownames = FALSE)
       }
       else {
-        four_year_college_going %>% 
-          group_by(!!sym(input$var)) %>% 
+        four_year %>% 
+          group_by(!!sym(input$var3)) %>% 
           summarize(Mean = mean(low_performing),
                     SD   = sd(low_performing),
                     Min  = min(low_performing),
@@ -320,8 +347,10 @@ server <- function(input, output, session){
           reactable(rownames = FALSE)
       }
     })
-    
+      
     }
 
 
 shinyApp(ui = ui, server = server)
+
+
