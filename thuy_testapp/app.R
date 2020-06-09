@@ -8,6 +8,7 @@ library(ggridges)
 library(glue)
 library(reactable)
 library(DT)
+library(shinythemes)
 
 theme_set(theme_minimal(15))
 
@@ -183,6 +184,7 @@ create_react <- function(df, var, input) {
 
 
 ui <- navbarPage(
+  theme = shinytheme("cerulean"),
   "School Crime and Safety Survey (Data Source: https://nces.ed.gov/surveys/ssocs/)",
   
   tabPanel(
