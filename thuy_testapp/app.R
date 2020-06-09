@@ -187,7 +187,7 @@ create_react <- function(df, var, input) {
 
 
 ui <- navbarPage(
-  theme = shinytheme("superhero"),
+  theme = shinytheme("flatly"),
   "School Crime and Safety Survey (Data Source: https://nces.ed.gov/surveys/ssocs/)",
   
   tabPanel(
