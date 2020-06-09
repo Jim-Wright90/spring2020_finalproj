@@ -183,179 +183,177 @@ create_react <- function(df, var, input) {
 
 
 ui <- navbarPage(
-    "School Crime and Safety Survey (Data Source: https://nces.ed.gov/surveys/ssocs/)",
-    
-    tabPanel(
-      "Four Year Overview",
-      fluidPage(
-        plotOutput("full_plot1"), plotOutput("full_plot2"), DTOutput("four_year")
-        )
-      ),
-    tabPanel(
-      "2005-2006 Dataset",
-      fluidPage(
-        plotOutput("plot06"), DTOutput("sf06")
-        )
-      ), 
-    tabPanel(
-      "2007-2008 Dataset",
-      fluidPage(
-        plotOutput("plot08"), DTOutput("sf08")
-        )
-      ),
-    tabPanel(
-      "2015-2016 Dataset",
-      fluidPage(
-        plotOutput("plot16"), DTOutput("sf16")
-        )
-      ),
-    tabPanel(
-      "2017-2018 Dataset",
-      fluidPage(
-        plotOutput("plot18"), DTOutput("sf18")
-        )
-      ),
-    tabPanel(
-      "School Characteristics and School Safety",
-      fluidPage(
-        sidebarPanel(
-          radioButtons("var1",
-                       "Factors correlated with school safety:",
-                       choices = c(
-                         "Urbanicity" = "urbanicity",
-                         "School Size" = "size",
-                         "Percentage of Low-Performing Students" = "low_performing_1",
-                         "Percentage of College-Going Students" = "college_going_1"
-                       ),
-                       selected = "size")
-        ),
-        mainPanel(
-          plotOutput("plots")
-        )
-      )
-    ),
-    tabPanel(
-      "College Bound Students",
-      fluidPage(
-        sliderInput("bins2",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30),
-        radioButtons("var2",
-                     "Facet distributions by:",
+  "School Crime and Safety Survey (Data Source: https://nces.ed.gov/surveys/ssocs/)",
+  
+  tabPanel(
+    "Four Year Overview",
+    fluidPage(
+      plotOutput("full_plot1"), plotOutput("full_plot2"), DTOutput("four_year")
+    )
+  ),
+  tabPanel(
+    "2005-2006 Dataset",
+    fluidPage(
+      plotOutput("plot06"), DTOutput("sf06")
+    )
+  ), 
+  tabPanel(
+    "2007-2008 Dataset",
+    fluidPage(
+      plotOutput("plot08"), DTOutput("sf08")
+    )
+  ),
+  tabPanel(
+    "2015-2016 Dataset",
+    fluidPage(
+      plotOutput("plot16"), DTOutput("sf16")
+    )
+  ),
+  tabPanel(
+    "2017-2018 Dataset",
+    fluidPage(
+      plotOutput("plot18"), DTOutput("sf18")
+    )
+  ),
+  tabPanel(
+    "School Characteristics and School Safety",
+    fluidPage(
+      sidebarPanel(
+        radioButtons("var1",
+                     "Factors correlated with school safety:",
                      choices = c(
-                       "None" = "none",
-                       "Year" = "year",
                        "Urbanicity" = "urbanicity",
-                       "School Size" = "size"
+                       "School Size" = "size",
+                       "Percentage of Low-Performing Students" = "low_performing_1",
+                       "Percentage of College-Going Students" = "college_going_1"
                      ),
-                     selected = "none"),
-        tabsetPanel(
-          tabPanel("Plot", plotOutput("ggplot_dist")), 
-          tabPanel("Table", reactableOutput("dist_smry"))
-        )
+                     selected = "size")
+      ),
+      mainPanel(
+        plotOutput("plots")
       )
-    ),
-    tabPanel(
-      "Low Performing Students",
-      fluidPage(
-        sliderInput("bins3",
-                    "Number of bins:",
-                    min = 1,
-                    max = 50,
-                    value = 30),
-        radioButtons("var3",
-                     "Facet distributions by:",
-                     choices = c(
-                       "None" = "none",
-                       "Year" = "dataset",
-                       "Urbanicity" = "urbanicity",
-                       "School Size" = "size"
-                     ),
-                     selected = "none"),
-        tabsetPanel(
+    )
+  ),
+  tabPanel(
+    "College Bound Students",
+    fluidPage(
+      sliderInput("bins2",
+                  "Number of bins:",
+                  min = 1,
+                  max = 50,
+                  value = 30),
+      radioButtons("var2",
+                   "Facet distributions by:",
+                   choices = c(
+                     "None" = "none",
+                     "Year" = "year",
+                     "Urbanicity" = "urbanicity",
+                     "School Size" = "size"
+                   ),
+                   selected = "none"),
+      tabsetPanel(
+        tabPanel("Plot", plotOutput("ggplot_dist")), 
+        tabPanel("Table", reactableOutput("dist_smry"))
+      )
+    )
+  ),
+  tabPanel(
+    "Low Performing Students",
+    fluidPage(
+      sliderInput("bins3",
+                  "Number of bins:",
+                  min = 1,
+                  max = 50,
+                  value = 30),
+      radioButtons("var3",
+                   "Facet distributions by:",
+                   choices = c(
+                     "None" = "none",
+                     "Year" = "dataset",
+                     "Urbanicity" = "urbanicity",
+                     "School Size" = "size"
+                   ),
+                   selected = "none"),
+      tabsetPanel(
         tabPanel("Plot", plotOutput("low_perf")), 
         tabPanel("Table", reactableOutput("smry_low_perf"))
       )
     )
   )
 )
-    
+
 server <- function(input, output, session){
   
-    output$full_plot1 <- renderPlot({full_plot1})
-    output$full_plot2 <- renderPlot({full_plot2})
-    output$four_year <- renderDT({four_year})
-    output$plot06 <- renderPlot({plot06})
-    output$sf06 <- renderDT({sf06})
-    output$plot08 <- renderPlot({plot08})
-    output$sf08 <- renderDT({sf08})
-    output$plot16 <- renderPlot({plot16})
-    output$sf16 <- renderDT({sf16})
-    output$plot18 <- renderPlot({plot18})
-    output$sf18 <- renderDT({sf18})
+  output$full_plot1 <- renderPlot({full_plot1})
+  output$full_plot2 <- renderPlot({full_plot2})
+  output$four_year <- renderDT({four_year})
+  output$plot06 <- renderPlot({plot06})
+  output$sf06 <- renderDT({sf06})
+  output$plot08 <- renderPlot({plot08})
+  output$sf08 <- renderDT({sf08})
+  output$plot16 <- renderPlot({plot16})
+  output$sf16 <- renderDT({sf16})
+  output$plot18 <- renderPlot({plot18})
+  output$sf18 <- renderDT({sf18})
+  
+  output$plots <- renderPlot({
+    ggplot(four_year, aes(x = safety_indicators, y = total))+
+      geom_col(color = "mediumseagreen", alpha = 0.7)+
+      facet_wrap(input$var1)+
+      labs(x = "School Safety Indicators",
+           y = "Total Number of Cases",
+           title = "School Characteristics Correlated with School Safety")
+  })
+  
+  output$ggplot_dist <- renderPlot(create_plot(four_year, college_going, input))
+  
+  output$dist_smry <- renderReactable(create_react(four_year, college_going, input))
+  
+  output$low_perf <- renderPlot({
     
-    output$plots <- renderPlot({
-      ggplot(four_year, aes(x = safety_indicators, y = total))+
-        geom_col(color = "mediumseagreen", alpha = 0.7)+
-        facet_wrap(input$var1)+
-        labs(x = "School Safety Indicators",
-             y = "Total Number of Cases",
-             title = "School Characteristics Correlated with School Safety")
-    })
- 
-    output$ggplot_dist <- renderPlot(create_plot(four_year, college_going, input))
+    p <- ggplot(four_year, aes(low_performing)) +
+      geom_histogram(bins = input$bins3,
+                     fill = "cornflowerblue",
+                     alpha = 0.7,
+                     color = "gray40") +
+      scale_x_continuous("Percentage of Students", labels = function(x) paste0(x, "%")) +
+      theme(panel.grid.major.y = element_blank(),
+            panel.grid.minor.x = element_blank(),
+            panel.grid.major.x = element_line(color = "gray80")) +
+      labs(x = "Percentage of Students",
+           y = "Number of Schools", 
+           title = "Percentage of Students Scoring Below 15th Percentile on Standardized Assessment") 
     
-    output$dist_smry <- renderReactable(create_react(four_year, college_going, input))
-        
-    output$low_perf <- renderPlot({
-      
-      p <- ggplot(four_year, aes(low_performing)) +
-        geom_histogram(bins = input$bins3,
-                       fill = "cornflowerblue",
-                       alpha = 0.7,
-                       color = "gray40") +
-        scale_x_continuous("Percentage of Students", labels = function(x) paste0(x, "%")) +
-        theme(panel.grid.major.y = element_blank(),
-              panel.grid.minor.x = element_blank(),
-              panel.grid.major.x = element_line(color = "gray80")) +
-        labs(x = "Percentage of Students",
-             y = "Number of Schools", 
-             title = "Percentage of Students Scoring Below 15th Percentile on Standardized Assessment") 
-      
-      if(input$var3 != "none") {
-        p <- p +
-          facet_wrap(input$var3)
-      }
-      p
-    })
-    
-    output$smry_low_perf <- renderReactable({
-      if(input$var3 == "none") {
-        four_year %>%
-          summarize(Mean = mean(low_performing),
-                    SD   = sd(low_performing),
-                    Min  = min(low_performing),
-                    Max  = max(low_performing)) %>%
-          mutate_if(is.numeric, round, 2) %>%
-          reactable(rownames = FALSE)
-      }
-      else {
-        four_year %>% 
-          group_by(!!sym(input$var3)) %>% 
-          summarize(Mean = mean(low_performing),
-                    SD   = sd(low_performing),
-                    Min  = min(low_performing),
-                    Max  = max(low_performing)) %>% 
-          mutate_if(is.numeric, round, 2) %>% 
-          reactable(rownames = FALSE)
-      }
-    })
-      
+    if(input$var3 != "none") {
+      p <- p +
+        facet_wrap(input$var3)
     }
+    p
+  })
+  
+  output$smry_low_perf <- renderReactable({
+    if(input$var3 == "none") {
+      four_year %>%
+        summarize(Mean = mean(low_performing),
+                  SD   = sd(low_performing),
+                  Min  = min(low_performing),
+                  Max  = max(low_performing)) %>%
+        mutate_if(is.numeric, round, 2) %>%
+        reactable(rownames = FALSE)
+    }
+    else {
+      four_year %>% 
+        group_by(!!sym(input$var3)) %>% 
+        summarize(Mean = mean(low_performing),
+                  SD   = sd(low_performing),
+                  Min  = min(low_performing),
+                  Max  = max(low_performing)) %>% 
+        mutate_if(is.numeric, round, 2) %>% 
+        reactable(rownames = FALSE)
+    }
+  })
+  
+}
 
 
 shinyApp(ui = ui, server = server)
-
-
