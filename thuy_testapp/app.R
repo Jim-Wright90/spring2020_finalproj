@@ -67,7 +67,9 @@ four_year <- bind_rows("05-06" = sf06, "07-08" = sf08, "15-16" = sf16, "17-18" =
                values_to = "total") %>% 
   mutate(urbanicity = recode(urbanicity, '1' = "City", '2' = "Suburb", '3' = "Town", '4' = "Rural"),
          size = recode(size, '1' = "<300", '2' = "300-499", '3' = "500-999", '4' = "1,000+"),
-         size = fct_relevel(size, "<300", "300-499", "500-999", "1,000+"))
+         size = fct_relevel(size, "<300", "300-499", "500-999", "1,000+"),
+         low_performing_1 = ifelse(low_performing >= 50, "Higher-performing", "Lower-performing"),
+         college_going_1 = ifelse(college_going >= 50, "More College-bound", "Less College-bound"))
 
 by_year <- four_year %>% 
   group_by(year) %>%
@@ -154,7 +156,7 @@ create_plot <- function(df, var, input) {
 }
 
 create_react <- function(df, var, input) {
-  if(input$var == "none") {
+  if(input$var2 == "none") {
     df %>% 
       summarize(Mean = mean({{var}}),
                 SD = sd({{var}}),
@@ -190,31 +192,31 @@ ui <- navbarPage(
         )
       ),
     tabPanel(
-      "2005-2006",
+      "2005-2006 Dataset",
       fluidPage(
         plotOutput("plot06"), DTOutput("sf06")
         )
       ), 
     tabPanel(
-      "2007-2008",
+      "2007-2008 Dataset",
       fluidPage(
         plotOutput("plot08"), DTOutput("sf08")
         )
       ),
     tabPanel(
-      "2015-2016",
+      "2015-2016 Dataset",
       fluidPage(
         plotOutput("plot16"), DTOutput("sf16")
         )
       ),
     tabPanel(
-      "2017-2018",
+      "2017-2018 Dataset",
       fluidPage(
         plotOutput("plot18"), DTOutput("sf18")
         )
       ),
     tabPanel(
-      "Correlations",
+      "School Characteristics and School Safety",
       fluidPage(
         sidebarPanel(
           radioButtons("var1",
@@ -222,8 +224,8 @@ ui <- navbarPage(
                        choices = c(
                          "Urbanicity" = "urbanicity",
                          "School Size" = "size",
-                         "Percentage of Low-Performing Students" = "low_performing",
-                         "Percentage of College-Going Students" = "college_going"
+                         "Percentage of Low-Performing Students" = "low_performing_1",
+                         "Percentage of College-Going Students" = "college_going_1"
                        ),
                        selected = "size")
         ),
@@ -295,9 +297,12 @@ server <- function(input, output, session){
     output$sf18 <- renderDT({sf18})
     
     output$plots <- renderPlot({
-      ggplot(four_year, aes(x = input$var1, y = total))+
-        geom_col(color = "cornflowerblue", alpha = 0.7)+
-        facet_wrap(input$var1)
+      ggplot(four_year, aes(x = safety_indicators, y = total))+
+        geom_col(color = "mediumseagreen", alpha = 0.7)+
+        facet_wrap(input$var1)+
+        labs(x = "School Safety Indicators",
+             y = "Total Number of Cases",
+             title = "School Characteristics Correlated with School Safety")
     })
  
     output$ggplot_dist <- renderPlot(create_plot(four_year, college_going, input))
