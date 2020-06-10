@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ---
 title: "Organized Shiny Code"
 author: "Thuy Nguyen, JP Pedroza, Jim Wright, and Claire Zhang"
@@ -265,7 +264,7 @@ plot06 <- four_year %>%
 
 ```
 
-```{r iteration  - another way to make plot for each year}
+```{r iteration  - another way to make plots for each year}
 tmpt_data <- four_year %>% 
   group_by(year) %>% 
   #nest() %>% 
@@ -313,7 +312,6 @@ walk2(paths, plot1_by_year$plot, ggsave,
 
 ```{r}
 head(four_year)
-# i'm trying to understand what "collage bound" is 
 college_bound_hist <- four_year %>% 
   group_by(year) %>% 
   nest() %>% 
@@ -330,7 +328,7 @@ college_bound_hist <- four_year %>%
         panel.grid.minor.x = element_blank(),
         panel.grid.major.x = element_line(color = "gray80")) +
   labs(x = "Percentage of Students College Bound",
-       y = "Number of Schools", # "Total number of students across areas"?
+       y = "Number of Schools", 
        title = glue("Distribution of School Urbanicity\n by College Bound Students: {.x}")) + 
   theme(plot.title = element_text(hjust = 0.5),
         axis.text = element_text(size = 10),
@@ -449,7 +447,7 @@ size_hist <- four_year %>%
         panel.grid.minor.x = element_blank(),
         panel.grid.major.x = element_line(color = "gray80")) +
   labs(x = "Percentage of Students College Bound",
-       y = "Number of Schools",
+       y = "Number of schools",
        title = glue("Distribution of School Enrollment\n by College Bound Students: {.x}")) +
   theme(plot.title = element_text(hjust = 0.5),
         axis.text = element_text(size = 10),
@@ -564,17 +562,13 @@ size_totals
 ```
 
 
-```{r}
-head(four_year)
-
+```{r models}
 year_ind <- four_year %>% 
   group_by(year) %>% 
   nest() %>% 
   mutate(mod1 = map(data, ~lm(total ~ urbanicity, data = .x)),
          mod2 = map(data, ~lm(total ~ size, data = .x)), 
-          mod3 = map(data, ~lm(total ~ urbanicity + size, data = .x)))
-
-# Just an experiment: I can imagine that size will affect rate of crime more than urbanicity does, how about control for size?
+         mod3 = map(data, ~lm(total ~ urbanicity + size, data = .x)))
 
 year_ind$mod1[[1]]
 year_ind$mod2[[1]]
@@ -584,580 +578,23 @@ comp <- anova(year_ind$mod1[[1]], year_ind$mod2[[1]], year_ind$mod3[[1]])
 comp
 
 year_ind %>% 
-  mutate(comp12 = map2(mod1, mod2, anova))
-
-str(comp)
-
-year_ind %>%
-    pivot_longer(mod1:mod3, names_to = "model", values_to = "output")
+  mutate(comp12 = map2(mod1, mod2, anova)) %>% 
+  pivot_longer(mod1:mod3, names_to = "model", values_to = "output") 
 
 year_ind %>%
     gather(model, output, mod1:mod3) %>%
-    mutate(r2 = map_dbl(output, ~summary(.x)$r.squared))
-
-year_ind %>%
-    gather(model, output, mod1:mod3) %>%
-    mutate(r2 = map_dbl(output, ~summary(.x)$r.squared)) %>%
+    mutate(r2 = map_dbl(output, ~summary(.x)$r.squared)) %>% 
 ggplot(aes(model, r2)) +
     geom_col(aes(fill = model)) +
     facet_wrap(~year) +
     scale_fill_brewer(palette = "Set2") +
   labs(x = "Model",
        y = "r2",
-       title = "Model Comparison",
+       title = "Models Comparison",
        caption = "Mod1: total incidents predicted by school urbanicity\n  Mod2: total incidents predicted by school enrollment \n Mod3: total incidents predicted by school urbanicity, controlled for school enrollment") +
   theme(plot.title = element_text(hjust = 0.5),
         axis.text=element_text(size=10),
         axis.title=element_text(size=10))
 
-=======
----
-title: "Organized Shiny Code"
-author: "Thuy Nguyen, JP Pedroza, Jim Wright, and Claire Zhang"
-date: "5/25/2020"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse)
-library(here)
-library(rio)
-library(fs)
-library(ggridges)
-library(glue)
-library(reactable)
-# devtools::install_github("gadenbuie/regexplain")
 ```
 
-Background:
-This project will be a shiny app that will provide a quick look into data from three different years of the School Survey on Crime and Safety (05-06, 07-08, 17-18). The app will provide users with all the variables from these datasets that are matched between the different years. We are hoping that this shiny app will be able to provide general associations between continuous variables while being able to choose which year of the dataset the user is interested in as well as looking at differences between categories for any variable of interest. We are currently working on the shiny app and any feedback would be greatly appreciated, especially with the functions as they will be the base for the shiny app.
-
-
-```{r data upload}
-files <- dir_ls(here::here("data"), glob = "*.csv")
-
-batch <- map_df(files, read_csv)
-batch
-
-batch <- batch %>% 
-  mutate(fr_ubran = as.factor(fr_urban),
-         fr_size = as.factor(fr_size),
-         year = as.factor(c0578_yy))
-```
-
-```{r}
-batch %>% 
-  group_by(year) %>% 
-  nest() %>% 
-  mutate(mean_score = map_dbl(data, ~mean(.x$c0534))) %>% 
-  ggplot(aes(year, mean_score)) +
-  geom_col()
-
-```
-
-```{r parallel iteration}
-comparing <- batch %>% 
-  group_by(year) %>% 
-  nest() %>% 
-  mutate(model_1 = map(data, ~lm(c0534 ~ fr_urban, data = .x)),
-         model_2 = map(data, ~lm(c0534 ~ fr_size, data = .x))) %>% 
-  mutate(model_compare = map2(model_1, model_2, stats::AIC),
-         aic_model_1 = map_dbl(model_compare, list('AIC', 1)),
-         aic_model_2 = map_dbl(model_compare, list('AIC', 2)))
-
-compare_plot <- comparing %>% 
-  dplyr::select(year, aic_model_1, aic_model_2) %>% 
-  pivot_longer(-year, names_to = 'year_AIC', values_to = 'values')
-
-```
-
-#c0534: Percent students likely to go to college
-#c0536: Percent students academic achievement important
-#c0534: Crime where school located
-
-#Model predicts effects of crime on the likelihood of students go to college. 
-
-```{r nest and mutate}
-models <- batch %>% 
-  group_by(year) %>% 
-  nest() %>% 
-  mutate(model = map(data, ~lm(c0534 ~ c0562, data = .x))) %>% 
-  pivot_longer(model, names_to = 'model', values_to = 'output') %>% 
-  mutate(r2 = map_dbl(output, ~summary(.x)$r.squared))
-```
-
-
-```{r}
-# Function 1
-numeric_plot <- function(df, x, y){
-  plot_num <- ggplot({{df}}, aes({{x}}, {{y}})) +
-      geom_point(alpha = .4, color = 'gray70') +
-      geom_smooth(method = 'lm')
-  
-  if(!as.numeric({{x}}) & !as.numeric({{y}})){
-    stop()
-  }
-  else{
-    plot_num
-  }
-  return(plot_num)
-}
-
-numeric_plot(batch, batch$c0534, batch$c0536) +
-  labs(x = 'X Value',
-       y = 'Y Value',
-       Title = 'A Title',
-       caption = 'R2') +
-  facet_wrap(~year)
-
-
-```
-
-```{r}
-# Function 2
-bar_plot <- function(df, x, y, fill){
-  plot_cat <- ggplot({{df}}, aes({{x}}, {{y}}, {{fill}})) +
-  geom_col() +
-  coord_flip()
-  
-  if(!as.numeric({{x}}) & !as.numeric({{y}})){
-    stop()
-  }
-  else{
-    plot_cat
-  }
-return(plot_cat)
-}
-
-bar_plot(batch, batch$fr_urban, batch$c0534, fill = batch$fr_urban) +
-  labs(x = 'X Value',
-       y = 'Y Value',
-       Title = 'A Title',
-       caption = 'R2') +
-  facet_wrap(~year)
-
-```
-
-
-
-### Nest and Mutate (Claire Zhang)
-
-I'll use the original four years' datasets (05-06, 07-08, 15-16, 17-18) from the NCES website, https://nces.ed.gov/surveys/ssocs/, and select variables of interest that are available across all four years including urbanicity, school size, percentage of low-performing students, percentage of college-going students, and total numbers of a) incidents reported, b) incidents reported to police, and c) out-of-school suspensions.
-
-step 1, prepare four-year data:
-
-```{r}
-sf06 <- import(here("data_1", "pu_ssocs06_spss.sav"),
-               setclass = "tbl_df") %>%
-        select(urbanicity = FR_LOC4,
-               size = FR_SIZE,
-               low_performing = C0532,
-               college_going = C0534,
-               incidents = INCID06,
-               incidents_police = INCPOL06,
-               suspension = OUTSUS06) %>% 
-        mutate(year = "2005-2006")
-sf08 <- import(here("data_1", "pu_ssocs08_spss.sav"),
-               setclass = "tbl_df") %>% 
-        select(urbanicity = FR_URBAN,
-               size = FR_SIZE,
-               low_performing = C0532,
-               college_going = C0534,
-               incidents = INCID08,
-               incidents_police = INCPOL08,
-               suspension = OUTSUS08)%>% 
-        mutate(year = "2007-2008")
-sf16 <- import(here("data_1", "pu_ssocs16.sas7bdat"),
-               setclass = "tbl_df")%>% 
-        select(urbanicity = FR_URBAN,
-               size = FR_SIZE,
-               low_performing = C0532,
-               college_going = C0534,
-               incidents = INCID16,
-               incidents_police = INCPOL16,
-               suspension = OUTSUS16)%>% 
-        mutate(year = "2015-2016")
-sf18 <- import(here("data_1", "pu_ssocs18.sav"),
-               setclass = "tbl_df")%>% 
-        select(urbanicity = FR_URBAN,
-               size = FR_SIZE,
-               low_performing = C0532,
-               college_going = C0534,
-               incidents = INCID18,
-               incidents_police = INCPOL18,
-               suspension = OUTSUS18)%>% 
-        mutate(year = "2017-2018")
-four_year <- bind_rows(sf06, sf08, sf16, sf18) %>%
-  pivot_longer(cols = c(incidents, incidents_police, suspension),
-                          names_to = "safety_indicators",
-                          values_to = "total") %>% 
-  mutate(urbanicity = recode(urbanicity, '1' = "City", '2' = "Suburb", '3' = "Town", '4' = "Rural"),
-         size = recode(size, '1' = "<300", '2' = "300-499", '3' = "500-999", '4' = "1,000+"),
-         size = fct_relevel(size, "<300", "300-499", "500-999", "1,000+"))
-
-```
-
-step 2, inspect the four year data
-
-```{r}
-full_plot1 <- four_year %>%
-    group_by(year, safety_indicators) %>% 
-    mutate(mean = mean(total)) %>% 
-    ungroup() %>% 
-    mutate(year = readr::parse_number(year)) %>% 
-    ggplot(aes(year, mean))+
-    geom_line(aes(color = safety_indicators), size = 0.9)+
-    geom_point()+
-    scale_x_continuous(limits = c(2004, 2018),
-                       breaks = c(2004, 2006, 2008, 2010, 2012, 2014, 2016, 2018))+
-    labs(title = "School Safety from 2005 to 2018",
-         x = "School Year",
-         y = "Average Number of Cases in School",
-         fill = "Safety Indicators")
-
-full_plot1
-
-```
-
-step 3, nest by year and visualize school safety, size, and urbanicity
-
-```{r}
-plot1 <- function(x){
-  x %>%
-    ggplot(aes(size, total))+
-    geom_col(aes(fill = safety_indicators),
-             position = "dodge")+
-    facet_wrap(~urbanicity)+
-    theme_minimal()+
-    scale_fill_brewer(palette = "Set2")+
-    labs(title = "School Safety, School Size, and Urbanicity",
-         x = "School Size",
-         y = "Total Number of Cases",
-         fill = "Safety Indicators")
-}
-
-plot1(four_year)
-
-plot1_by_year <- four_year %>% 
-  group_by(year) %>%
-  nest() %>% 
-  mutate(plot = map2(data, year, ~plot1(.x)+
-                      labs(subtitle = glue("(Surveyed School Year: {.y})"))))
-
-plot1_by_year$plot[[1]]
-plot1_by_year$plot[[2]]
-plot1_by_year$plot[[3]]
-plot1_by_year$plot[[4]]
-
-```
-
-
-```{r iteration}
-#tried but failed
-# creating label
-#want to iterate the year above
-
-tmpt_data <- four_year %>% 
-  group_by(year) %>% 
-  nest() %>% 
-  mutate(label = 
-           glue("Year {str_to_title(year)}"))
-
-# creat plot for 4 years - tried but failed
-final_plot <- tmpt %>% 
-  group_by(year, label) %>% 
-  nest() %>% 
-  mutate(plots = pmap(list(tmpt_data, label),
-                      ~ggplot(..1, aes(size, total))+
-                        geom_col(aes(fill = safety_indicators),
-                         position = "dodge")+
-                facet_wrap(~urbanicity)+
-                theme_minimal()+
-                scale_fill_brewer(palette = "Set2")+
-                labs(title = "School Safety, School Size, and Urbanicity",
-                     x = "School Size",
-                     y = "Total Number of Cases",
-                     fill = "Safety Indicators",
-                     caption = ..2)))
-```
-
-
-
-```{r walk reduce or modify used}
-
-fs::dir_create(here::here("plots_1", "indicators"))
-
-
-files <- plot1_by_year$year
-paths <- here::here("plots_1", "indicators", glue("{files}.png"))
-paths
-
-walk2(paths, plot1_by_year$plot, ggsave,
-      width = 9.5, 
-      height = 6.5,
-      dpi = 500)
-```
-
-
-```{r}
-head(four_year)
-# i'm trying to understand what "collage bound" is 
-college_bound_hist <- four_year %>% 
-  group_by(year) %>% 
-  nest() %>% 
-  mutate(plots = pmap(list(year, data), 
-  ~ggplot(..2, aes(college_going)) +
-  geom_histogram(fill = "#56B4E9",
-                color = "white", 
-                alpha = 0.9,
-                bins = 25) +
-  facet_wrap(~urbanicity) +
-  theme_minimal(base_size = 15) +
-  scale_x_continuous("Percentage of Students", labels = function(x) paste0(x, "%")) +
-  theme(panel.grid.major.y = element_blank(),
-        panel.grid.minor.x = element_blank(),
-        panel.grid.major.x = element_line(color = "gray80")) +
-  labs(x = "Percentage of Students College Bound",
-       y = "Number of Schools", # "Total number of students across areas"?
-       title = glue("Distribution of School Urbanicity\n by College Bound Students: {.x}")) + 
-  theme(plot.title = element_text(hjust = 0.5),
-        axis.text = element_text(size = 10),
-        axis.title=element_text(size=10))))
-
-college_bound_hist$plots[[1]]
-college_bound_hist$plots[[4]]
-
-fs::dir_create(here::here("plots", "college_bound_hist"))
-
-
-files <- college_bound_hist$year
-paths <- here::here("plots", "college_bound_hist", glue("{files}.png"))
-paths
-
-walk2(paths, college_bound_hist$plots, ggsave,
-      width = 9.5, 
-      height = 6.5,
-      dpi = 500)
-```
-
-```{r}
-head(four_year)
-
-low_perf_urban <- four_year %>% 
-  group_by(year) %>% 
-  nest() %>% 
-  mutate(plots = pmap(list(year, data), 
-  ~ggplot(..2, aes(low_performing, urbanicity)) +
-  ggridges::geom_density_ridges(color = "white",
-                                fill = "#A9E5C5") +
-  theme_minimal(base_size = 10) +
-  scale_x_continuous("Percentage of Students", labels = function(x) paste0(x, "%")) +
-  theme(panel.grid.major.y = element_blank(),
-        panel.grid.minor.x = element_blank(),
-        panel.grid.major.x = element_line(color = "gray80")) +
-  labs(x = "Percentage of Students", 
-       y = "",
-       title = glue("Distribution of School Urbanicity\n by Students Scoring Below 15th Percentile on Standardized Tests:\n {.x}")) +
-  theme(plot.title = element_text(hjust = 0.5),
-        axis.text=element_text(size=10),
-        axis.title=element_text(size=10))))
-
-low_perf_urban$plots[[1]]
-low_perf_urban$plots[[2]]
-
-fs::dir_create(here::here("plots", "low_perf_urban"))
-
-
-files <- low_perf_urban$year
-paths <- here::here("plots", "low_perf_urban", glue("{files}.png"))
-paths
-
-walk2(paths, low_perf_urban$plots, ggsave,
-      width = 9.5, 
-      height = 6.5,
-      dpi = 500)
-```
-
-```{r}
-head(four_year)
-
-size_hist <- four_year %>% 
-  group_by(year) %>% 
-  nest() %>% 
-  mutate(plots = pmap(list(year, data), 
-  ~ggplot(..2, aes(college_going)) +
-  geom_histogram(fill = "#56B4E9",
-                color = "white", 
-                alpha = 0.9,
-                bins = 25) +
-  facet_wrap(~size) +
-  theme_minimal(base_size = 15) +
-  scale_x_continuous("Percentage of Students", labels = function(x) paste0(x, "%")) +
-  theme(panel.grid.major.y = element_blank(),
-        panel.grid.minor.x = element_blank(),
-        panel.grid.major.x = element_line(color = "gray80")) +
-  labs(x = "Percentage of Students College Bound",
-       y = "Number of Schools",
-       title = glue("Distribution of School Enrollment\n by College Bound Students: {.x}")) +
-  theme(plot.title = element_text(hjust = 0.5),
-        axis.text = element_text(size = 10),
-        axis.title=element_text(size=10))))
-
-size_hist$plots[[1]]
-size_hist$plots[[4]]
-
-fs::dir_create(here::here("plots", "size_hist"))
-
-
-files <- size_hist$year
-paths <- here::here("plots", "size_hist", glue("{files}.png"))
-paths
-
-walk2(paths, size_hist$plots, ggsave,
-      width = 9.5, 
-      height = 6.5,
-      dpi = 500)
-```
-
-```{r}
-size_density <- four_year %>% 
-  group_by(year) %>% 
-  nest() %>% 
-  mutate(plots = pmap(list(year, data), 
-  ~ggplot(..2, aes(low_performing, size)) +
-  ggridges::geom_density_ridges(color = "white",
-                                fill = "#A9E5C5") +
-  theme_minimal(base_size = 10) +
-  scale_x_continuous("Percentage of Students", labels = function(x) paste0(x, "%")) +
-  theme(panel.grid.major.y = element_blank(),
-        panel.grid.minor.x = element_blank(),
-        panel.grid.major.x = element_line(color = "gray80")) +
-  labs(x = "Percentage of Students", 
-       y = "",
-       title = glue("Distribution of School Enrollment\n by Students Scoring Below 15th Percentile on Standardized Tests:\n {.x}")) +
-  theme(plot.title = element_text(hjust = 0.5),
-        axis.text=element_text(size=10),
-        axis.title=element_text(size=10))))
-
-size_density$plots[[1]]
-size_density$plots[[2]]
-
-fs::dir_create(here::here("plots", "size_density"))
-
-
-files <- size_density$year
-paths <- here::here("plots", "size_density", glue("{files}.png"))
-paths
-
-walk2(paths, size_density$plots, ggsave,
-      width = 9.5, 
-      height = 6.5,
-      dpi = 500)
-```
-
-```{r}
-head(batch)
-head(four_year)
-
-r_tbl <- four_year %>% 
-  select(year, urbanicity, size, low_performing, college_going) %>% 
-  reactable(columns = list(
-    year = colDef(name = "Year"),
-    urbanicity = colDef(name = "School Urbanicity"),
-    size = colDef(name = "School Enrollment"),
-    low_performing = colDef(name = "Percentage of Low Performing Students"),
-    college_going = colDef(name = "Percentage of College Bound Students")
-  ),
-   height = 500,
-   striped = TRUE, 
-   compact = TRUE, 
-   outlined = TRUE,
-   searchable = TRUE)
-
-r_tbl
-
-urban_totals <- four_year %>% 
-  group_by(year, urbanicity) %>% 
-  summarize(n=n()) %>% 
-  na.omit() %>% 
-  reactable(columns = list(
-    year = colDef(name = "Year"),
-    urbanicity = colDef(name = "School Urbanicity"),
-    n = colDef(name = "Total")
-  ),
-   height = 500,
-   striped = TRUE, 
-   compact = TRUE, 
-   outlined = TRUE,
-   searchable = TRUE)
-
-urban_totals
-
-size_totals <- four_year %>% 
-  group_by(year, size) %>% 
-  summarize(n=n()) %>% 
-  na.omit() %>% 
-  reactable(columns = list(
-    year = colDef(name = "Year"),
-    size = colDef(name = "School Enrollment"),
-    n = colDef(name = "Total")
-  ),
-   height = 500,
-   striped = TRUE, 
-   compact = TRUE, 
-   outlined = TRUE,
-   searchable = TRUE)
-
-size_totals
-```
-
-
-```{r}
-head(four_year)
-
-year_ind <- four_year %>% 
-  group_by(year) %>% 
-  nest() %>% 
-  mutate(mod1 = map(data, ~lm(total ~ urbanicity, data = .x)),
-         mod2 = map(data, ~lm(total ~ size, data = .x)), 
-          mod3 = map(data, ~lm(total ~ urbanicity + size, data = .x)))
-
-# Just an experiment: I can imagine that size will affect rate of crime more than urbanicity does, how about control for size?
-
-year_ind$mod1[[1]]
-year_ind$mod2[[1]]
-year_ind$mod3[[1]]
-
-comp <- anova(year_ind$mod1[[1]], year_ind$mod2[[1]], year_ind$mod3[[1]])
-comp
-
-year_ind %>% 
-  mutate(comp12 = map2(mod1, mod2, anova))
-
-str(comp)
-
-year_ind %>%
-    pivot_longer(mod1:mod3, names_to = "model", values_to = "output")
-
-year_ind %>%
-    gather(model, output, mod1:mod3) %>%
-    mutate(r2 = map_dbl(output, ~summary(.x)$r.squared))
-
-year_ind %>%
-    gather(model, output, mod1:mod3) %>%
-    mutate(r2 = map_dbl(output, ~summary(.x)$r.squared)) %>%
-ggplot(aes(model, r2)) +
-    geom_col(aes(fill = model)) +
-    facet_wrap(~year) +
-    scale_fill_brewer(palette = "Set2") +
-  labs(x = "Model",
-       y = "r2",
-       title = "Model Comparison",
-       caption = "Mod1: total incidents predicted by school urbanicity\n  Mod2: total incidents predicted by school enrollment \n Mod3: total incidents predicted by school urbanicity, controlled for school enrollment") +
-  theme(plot.title = element_text(hjust = 0.5),
-        axis.text=element_text(size=10),
-        axis.title=element_text(size=10))
-
->>>>>>> master
-```
