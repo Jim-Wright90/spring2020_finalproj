@@ -1,0 +1,12 @@
+name: schoolsafety
+title: schoolsafety
+username:
+account: thuyn
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2437200
+bundleId: 3252787
+url: https://thuyn.shinyapps.io/schoolsafety/
+when: 1591807770.01256
+asMultiple: FALSE
+asStatic: FALSE

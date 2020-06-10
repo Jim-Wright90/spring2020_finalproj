@@ -9,7 +9,8 @@ library(glue)
 library(reactable)
 library(DT)
 library(shinythemes)
-
+library(rsconnect)
+#rsconnect::deployApp('thuy_testapp/app')
 theme_set(theme_minimal(15))
 
 
