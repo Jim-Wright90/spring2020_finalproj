@@ -1,0 +1,12 @@
+name: thuy_testapp
+title: thuy_testapp
+username:
+account: thuyn
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2437264
+bundleId: 3252821
+url: https://thuyn.shinyapps.io/thuy_testapp/
+when: 1591808353.21647
+asMultiple: FALSE
+asStatic: FALSE
