@@ -32,8 +32,7 @@ batch <- batch %>%
   mutate(fr_ubran = as.factor(fr_urban),
          fr_size = as.factor(fr_size),
          year = as.factor(c0578_yy))
-```
-
+`
 ```{r}
 batch %>% 
   group_by(year) %>% 
@@ -218,9 +217,6 @@ full_plot1 <- four_year %>%
         axis.title=element_text(size=10))
 
 full_plot1
-
-
-# Thuy: try date time for x axis
 ```
 
 step 3, nest by year and visualize school safety, size, and urbanicity
@@ -269,33 +265,32 @@ plot06 <- four_year %>%
 
 ```
 
-```{r iteration}
-#tried but failed
-# creating label
-#want to iterate the year above
-
+```{r iteration  - another way to make plot for each year}
 tmpt_data <- four_year %>% 
   group_by(year) %>% 
-  nest() %>% 
+  #nest() %>% 
   mutate(label = 
-           glue("Year {str_to_title(year)}"))
+           glue("year {str_to_title(year)}"))
 
-# creat plot for 4 years - tried but failed
-final_plot <- tmpt_data %>% 
+final_plots <- tmpt_data %>% 
   group_by(year, label) %>% 
   nest() %>% 
-  mutate(plots = pmap(list(tmpt_data, label),
-                      ~ggplot(..1, aes(size, total))+
+  mutate(plots = pmap(list(year, label, data),
+                      ~ggplot(..3, aes(size, total))+
                         geom_col(aes(fill = safety_indicators),
                          position = "dodge")+
                 facet_wrap(~urbanicity)+
                 theme_minimal()+
                 scale_fill_brewer(palette = "Set2")+
-                labs(title = "School Safety, School Size, and Urbanicity",
+                labs(title = glue("School Safety, School Size, and Urbanicity in year {..1}"),
                      x = "School Size",
                      y = "Total Number of Cases",
                      fill = "Safety Indicators",
-                     caption = ..2)))
+                     caption = glue("Survey result for {..2} only")))
+)
+
+# plot for year 2006
+final_plots$plots[[1]]
 ```
 
 
