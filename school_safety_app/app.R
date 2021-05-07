@@ -10,17 +10,13 @@ library(reactable)
 library(DT)
 library(shinythemes)
 library(rsconnect)
-#rsconnect::deployApp('thuy_testapp/app')
 theme_set(theme_minimal(15))
-
-
-
 
 # We draw our analytic data from the four year School Survey on Crime and Safety datasets (05-06, 07-08, 15-16, 17-18), downloaded from the NCES website, https://nces.ed.gov/surveys/ssocs/. 
 # We select variables of interest that are available across all four years. 
 # They are urbanicity, school size, percentage of low-performing students, percentage of college-going students, and total numbers of a) incidents reported, b) incidents reported to police, and c) out-of-school suspensions.
 
-# First, we import data frames and extract the variables of interest:
+# import data frames and extract the variables of interest:
 
 sf06 <- import(here("data_1", "pu_ssocs06_spss.sav"),
                setclass = "tbl_df") %>%
@@ -80,8 +76,7 @@ by_year <- four_year %>%
 
 #data import for college going tab
 
-
-# next, we produce plots to be used in the app:
+# plots to be used in the app:
 
 full_plot1 <- four_year %>%
   group_by(year, safety_indicators) %>% 
@@ -184,7 +179,7 @@ create_react <- function(df, var, input) {
 
 
 
-# finally, we write the app:
+# the app:
 
 
 ui <- navbarPage(
